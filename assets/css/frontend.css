@@ -1,0 +1,268 @@
+/**
+ * Frontend styles for Gravity Form Custom View
+ */
+
+/* Table styles */
+.gfcv-container {
+    margin: 20px 0;
+    overflow-x: auto;
+    direction: rtl;
+}
+
+.gfcv-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin-bottom: 20px;
+}
+
+.gfcv-table th,
+.gfcv-table td {
+    padding: 10px;
+    text-align: right;
+    border: 1px solid #ddd;
+}
+
+.gfcv-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.gfcv-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.gfcv-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Button styles */
+.gfcv-btn {
+    display: inline-flex;
+    align-items: center;
+    margin: 1px;
+    padding: 4px 8px;
+    background-color: #f7f7f7;    
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    font-size: 80%;
+	color: white;
+	padding: 5px 10px;
+	font-weight: normal !important;
+	font-family: Modam fa;
+	border-radius: 15px;
+	border: none;
+}
+
+.gfcv-btn:hover {
+    background-color: #e7e7e7;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.15);
+}
+
+.gfcv-btn .dashicons {
+    margin-left: 3px;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+
+.gfcv-spin {
+    animation: gfcv-spin 2s infinite linear;
+}
+
+@keyframes gfcv-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.gfcv-btn-details {
+    background-color: #014897;
+    color: #fff;
+}
+
+.gfcv-btn-details:hover {
+    background-color: #135e96;
+    background-image: linear-gradient(to bottom, #1a5b8e, #135e96);
+}
+
+.gfcv-btn-user-sms {
+    background-color: #00a445 ;
+    color: #fff;
+}
+
+.gfcv-btn-user-sms:hover {
+    background-color: #399648;
+    background-image: linear-gradient(to bottom, #399648, #2e8138);
+}
+
+.gfcv-btn-admin-sms {
+    background-color: #ffb900;
+    color: #fff;
+    border-color: #d39700;
+    background-image: linear-gradient(to bottom, #ffb900, #e6a700);
+}
+
+.gfcv-btn-admin-sms:hover {
+    background-color: #d39700;
+    background-image: linear-gradient(to bottom, #e6a700, #d39700);
+}
+
+.gfcv-btn-api {
+    background-color: #dc3232;
+    color: #fff;
+    border-color: #b32d2e;
+    background-image: linear-gradient(to bottom, #dc3232, #c92828);
+}
+
+.gfcv-btn-api:hover {
+    background-color: #b32d2e;
+    background-image: linear-gradient(to bottom, #c92828, #b32d2e);
+}
+
+/* Pagination styles */
+.gfcv-pagination {
+    margin: 20px 0;
+    text-align: center;
+    direction: rtl;
+}
+
+.gfcv-pagination-info {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.gfcv-pagination-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.gfcv-pagination-link,
+.gfcv-pagination-prev,
+.gfcv-pagination-next,
+.gfcv-pagination-current {
+    display: inline-block;
+    margin: 0 3px;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    text-decoration: none;
+    color: #333;
+}
+
+.gfcv-pagination-current {
+    background-color: #2271b1;
+    color: #fff;
+    border-color: #135e96;
+}
+
+.gfcv-pagination-link:hover,
+.gfcv-pagination-prev:hover,
+.gfcv-pagination-next:hover {
+    background-color: #f5f5f5;
+}
+
+/* Success and error messages */
+.gfcv-success-message {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+    color: #155724;
+}
+
+.gfcv-error-message {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    color: #721c24;
+}
+
+/* Modal styles */
+.gfcv-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.gfcv-modal-content {
+    position: relative;
+    background-color: #fefefe;    
+    margin: 5% auto;   
+    padding: 10px 20px;   
+    border: 0;   
+    width: 80%;   
+    max-width: 800px;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.gfcv-modal-close {
+    color: #000;
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer; 
+}
+
+.gfcv-modal-close:hover,
+.gfcv-modal-close:focus {
+    color: black;
+    text-decoration: none;
+}
+
+.gfcv-modal h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    font-size: 20px;
+    font-family: "Modam Fa", tahoma;
+    text-align: center;    
+}
+
+.gfcv-modal-body {
+    margin-top: 15px;
+}
+
+/* JSON data display */
+.gfcv-json-data {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 3px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    font-family: monospace;
+}
+
+/* Modal footer */
+.gfcv-modal-footer {
+    padding: 15px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+}
+
+/* SMS template display */
+.gfcv-sms-template {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 3px;
+    white-space: pre-wrap;
+}

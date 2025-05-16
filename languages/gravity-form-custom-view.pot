@@ -1,0 +1,310 @@
+# Copyright (C) 2023 Masood Vahid
+# This file is distributed under the GPL2.
+msgid ""
+msgstr ""
+"Project-Id-Version: Gravity Forms Results Custom View with ACL 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gravity-form-custom-view\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2023-05-25T12:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.7.1\n"
+"X-Domain: gravity-form-custom-view\n"
+
+#: gravity-form-custom-view.php:37
+msgid "Gravity Forms Results Custom View with ACL requires Gravity Forms to be installed and activated."
+msgstr ""
+
+#: includes/class-gfcv-admin.php:54
+#: includes/class-gfcv-admin.php:55
+msgid "Custom View"
+msgstr ""
+
+#: includes/class-gfcv-admin.php:207
+#: includes/class-gfcv-shortcode.php:133
+msgid "Security check failed"
+msgstr ""
+
+#: includes/class-gfcv-admin.php:214
+msgid "Invalid form ID"
+msgstr ""
+
+#: includes/class-gfcv-admin.php:219
+#: includes/class-gfcv-shortcode.php:158
+msgid "Gravity Forms API not available"
+msgstr ""
+
+#: includes/class-gfcv-admin.php:224
+msgid "Form not found"
+msgstr ""
+
+#: includes/class-gfcv-admin.php:240
+msgid "No fields found in this form."
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:77
+msgid "Loading..."
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:78
+msgid "Error loading data"
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:100
+msgid "Invalid custom view ID"
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:108
+msgid "Custom view not found"
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:113
+msgid "You do not have permission to view this content"
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:123
+msgid "Error retrieving form entries"
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:142
+#: includes/class-gfcv-shortcode.php:186
+#: includes/class-gfcv-shortcode.php:230
+msgid "Invalid parameters"
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:150
+#: includes/class-gfcv-shortcode.php:194
+#: includes/class-gfcv-shortcode.php:238
+msgid "Custom view not found"
+msgstr ""
+
+#: includes/class-gfcv-shortcode.php:163
+#: includes/class-gfcv-shortcode.php:207
+#: includes/class-gfcv-shortcode.php:251
+msgid "Entry not found"
+msgstr ""
+
+#: templates/admin/edit-view.php:19
+msgid "Edit Custom View"
+msgstr ""
+
+#: templates/admin/edit-view.php:19
+msgid "Add New Custom View"
+msgstr ""
+
+#: templates/admin/edit-view.php:33
+msgid "Custom view updated."
+msgstr ""
+
+#: templates/admin/edit-view.php:39
+msgid "Custom view created."
+msgstr ""
+
+#: templates/admin/edit-view.php:50
+msgid "View Title"
+msgstr ""
+
+#: templates/admin/edit-view.php:59
+msgid "Form"
+msgstr ""
+
+#: templates/admin/edit-view.php:63
+msgid "Select a form"
+msgstr ""
+
+#: templates/admin/edit-view.php:70
+msgid "Select the Gravity Form to use for this view."
+msgstr ""
+
+#: templates/admin/edit-view.php:76
+msgid "Field IDs to Display"
+msgstr ""
+
+#: templates/admin/edit-view.php:80
+msgid "Enter comma-separated field IDs to display in the table (e.g., 1,3,5)."
+msgstr ""
+
+#: templates/admin/edit-view.php:82
+msgid "Available Fields:"
+msgstr ""
+
+#: templates/admin/edit-view.php:105
+#: templates/admin/edit-view.php:246
+msgid "Please select a form to view available fields."
+msgstr ""
+
+#: templates/admin/edit-view.php:113
+msgid "Admin SMS Pattern"
+msgstr ""
+
+#: templates/admin/edit-view.php:117
+msgid "Enter the SMS pattern for admin. Use {field_id} to include form field values (e.g., {1} for field with ID 1)."
+msgstr ""
+
+#: templates/admin/edit-view.php:123
+msgid "User SMS Pattern"
+msgstr ""
+
+#: templates/admin/edit-view.php:127
+msgid "Enter the SMS pattern for users. Use {field_id} to include form field values."
+msgstr ""
+
+#: templates/admin/edit-view.php:133
+msgid "Kavenegar API Key"
+msgstr ""
+
+#: templates/admin/edit-view.php:137
+msgid "Enter your Kavenegar API key for SMS functionality."
+msgstr ""
+
+#: templates/admin/edit-view.php:143
+msgid "Send to API"
+msgstr ""
+
+#: templates/admin/edit-view.php:147
+msgid "Enable API integration"
+msgstr ""
+
+#: templates/admin/edit-view.php:153
+msgid "Send to API Details"
+msgstr ""
+
+#: templates/admin/edit-view.php:157
+msgid "Enter API integration details. Use {field_id} to include form field values."
+msgstr ""
+
+#: templates/admin/edit-view.php:163
+msgid "Details View HTML"
+msgstr ""
+
+#: templates/admin/edit-view.php:167
+msgid "Enter HTML for the details view. Use {field_id} to include form field values."
+msgstr ""
+
+#: templates/admin/edit-view.php:173
+msgid "User Access IDs"
+msgstr ""
+
+#: templates/admin/edit-view.php:177
+msgid "Enter comma-separated user IDs who can access this view. Leave empty for public access."
+msgstr ""
+
+#: templates/admin/edit-view.php:183
+msgid "Shortcode"
+msgstr ""
+
+#: templates/admin/edit-view.php:184
+msgid "Use this shortcode to display the custom view on your site:"
+msgstr ""
+
+#: templates/admin/edit-view.php:189
+msgid "Update Custom View"
+msgstr ""
+
+#: templates/admin/edit-view.php:189
+msgid "Create Custom View"
+msgstr ""
+
+#: templates/admin/edit-view.php:190
+msgid "Cancel"
+msgstr ""
+
+#: templates/admin/edit-view.php:249
+#: templates/admin/edit-view.php:252
+msgid "Error loading form fields."
+msgstr ""
+
+#: templates/admin/views-list.php:14
+msgid "Custom Views"
+msgstr ""
+
+#: templates/admin/views-list.php:15
+msgid "Add New"
+msgstr ""
+
+#: templates/admin/views-list.php:20
+msgid "Custom view deleted."
+msgstr ""
+
+#: templates/admin/views-list.php:27
+msgid "ID"
+msgstr ""
+
+#: templates/admin/views-list.php:28
+msgid "View Title"
+msgstr ""
+
+#: templates/admin/views-list.php:29
+msgid "Form"
+msgstr ""
+
+#: templates/admin/views-list.php:30
+msgid "Shortcode"
+msgstr ""
+
+#: templates/admin/views-list.php:31
+msgid "Date Created"
+msgstr ""
+
+#: templates/admin/views-list.php:32
+msgid "Actions"
+msgstr ""
+
+#: templates/admin/views-list.php:38
+msgid "No custom views found."
+msgstr ""
+
+#: templates/admin/views-list.php:61
+msgid "Edit"
+msgstr ""
+
+#: templates/admin/views-list.php:63
+msgid "Are you sure you want to delete this view?"
+msgstr ""
+
+#: templates/admin/views-list.php:67
+msgid "Delete"
+msgstr ""
+
+#: templates/frontend/custom-view.php:20
+msgid "Actions"
+msgstr ""
+
+#: templates/frontend/custom-view.php:26
+msgid "No entries found."
+msgstr ""
+
+#: templates/frontend/custom-view.php:36
+msgid "Preview Details"
+msgstr ""
+
+#: templates/frontend/custom-view.php:37
+msgid "User SMS"
+msgstr ""
+
+#: templates/frontend/custom-view.php:38
+msgid "Admin SMS"
+msgstr ""
+
+#: templates/frontend/custom-view.php:40
+msgid "Send to API"
+msgstr ""
+
+#: templates/frontend/custom-view.php:53
+msgid "Entry Details"
+msgstr ""
+
+#: templates/frontend/custom-view.php:69
+msgid "API Data"
+msgstr ""
+
+#: templates/frontend/custom-view.php:95
+msgid "User SMS Template"
+msgstr ""
+
+#: templates/frontend/custom-view.php:95
+msgid "Admin SMS Template"
+msgstr ""

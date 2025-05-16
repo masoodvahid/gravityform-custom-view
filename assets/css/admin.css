@@ -1,0 +1,66 @@
+/**
+ * Admin styles for Gravity Form Custom View
+ */
+
+/* General admin styles */
+.gfcv-form-container {
+    margin: 20px 0;
+}
+
+/* Field list styles */
+#available_fields {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+#field_list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.field-item {
+    margin-bottom: 5px;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.field-item:last-child {
+    border-bottom: none;
+}
+
+/* CodeMirror customizations */
+.CodeMirror {
+    border: 1px solid #ddd;
+    height: 300px !important;
+}
+
+/* Shortcode display */
+.shortcode-info {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin: 20px 0;
+}
+
+.shortcode-info code {
+    font-size: 14px;
+    background-color: #fff;
+    padding: 5px 10px;
+}
+
+/* Form table styles */
+.form-table th {
+    width: 200px;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    .form-table th {
+        width: auto;
+    }
+}

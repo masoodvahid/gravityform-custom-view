@@ -1,0 +1,60 @@
+/**
+ * Custom button styles for Gravity Form Custom View
+ * You can modify this file to customize the appearance of buttons
+ */
+
+/* Custom button styles - override default styles */
+.gfcv-btn {
+    /* General button styles */
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Individual button styles - customize colors for each button type */
+.gfcv-btn-details {
+    /* View details button */
+    background-color: #3498db !important;
+    border-color: #2980b9 !important;
+    background-image: linear-gradient(to bottom, #3498db, #2980b9) !important;
+}
+
+.gfcv-btn-details:hover {
+    background-color: #2980b9 !important;
+    background-image: linear-gradient(to bottom, #2980b9, #2573a7) !important;
+}
+
+.gfcv-btn-user-sms {
+    /* User SMS button */
+    background-color: #2ecc71 !important;
+    border-color: #27ae60 !important;
+    background-image: linear-gradient(to bottom, #2ecc71, #27ae60) !important;
+}
+
+.gfcv-btn-user-sms:hover {
+    background-color: #27ae60 !important;
+    background-image: linear-gradient(to bottom, #27ae60, #219d54) !important;
+}
+
+.gfcv-btn-admin-sms {
+    /* Admin SMS button */
+    background-color: #f39c12 !important;
+    border-color: #e67e22 !important;
+    background-image: linear-gradient(to bottom, #f39c12, #e67e22) !important;
+}
+
+.gfcv-btn-admin-sms:hover {
+    background-color: #e67e22 !important;
+    background-image: linear-gradient(to bottom, #e67e22, #d35400) !important;
+}
+
+.gfcv-btn-api {
+    /* API button */
+    background-color: #e74c3c !important;
+    border-color: #c0392b !important;
+    background-image: linear-gradient(to bottom, #e74c3c, #c0392b) !important;
+}
+
+.gfcv-btn-api:hover {
+    background-color: #c0392b !important;
+    background-image: linear-gradient(to bottom, #c0392b, #a93226) !important;
+}
