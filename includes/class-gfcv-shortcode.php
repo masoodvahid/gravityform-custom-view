@@ -97,7 +97,9 @@ class GFCV_Shortcode {
                     'ajax_url' => admin_url('admin-ajax.php'),
                     'nonce' => wp_create_nonce('gfcv_nonce'),
                     'loading_text' => __('در حال بارگذاری...', 'gravity-form-custom-view'),
-                    'error_text' => __('خطا در بارگذاری اطلاعات', 'gravity-form-custom-view')
+                    'error_text' => __('خطا در بارگذاری اطلاعات', 'gravity-form-custom-view'),
+                    'frontend_css_url' => GFCV_PLUGIN_URL . 'assets/css/frontend.css',
+                    'custom_buttons_css_url' => GFCV_PLUGIN_URL . 'assets/css/custom-buttons.css'
                 )
             );
         }
@@ -371,9 +373,78 @@ class GFCV_Shortcode {
         foreach ($form['fields'] as $field) {
             $field_id = $field->id;
             $merge_tag = '{' . $field_id . '}';
-            
+
             if (strpos($processed, $merge_tag) !== false) {
                 $field_value = rgar($entry, $field_id);
+                // Handle File Upload fields
+                if ($field->type === 'fileupload') {
+                    if (!empty($field_value)) {
+                        // Check if it's a JSON string (multi-file upload)
+                        if (is_string($field_value) && strpos($field_value, '[') === 0) {
+                            $json_files = json_decode($field_value, true);
+                            if (is_array($json_files)) {
+                                $field_value = $json_files;
+                            }
+                        }
+                        
+                        // Process files array or comma-separated string
+                        $files = is_array($field_value) ? $field_value : explode(',', $field_value);
+                        $links = array();
+                        
+                        foreach ($files as $file) {
+                            if (is_array($file) && isset($file['url'])) {
+                                // Handle JSON format from multi-file upload
+                                $file_url = $file['url'];
+                                $file_name = isset($file['name']) ? $file['name'] : basename($file_url);
+                                $links[] = '<a href="' . esc_url($file_url) . '" target="_blank" class="gfcv-file-link"><i class="dashicons dashicons-media-document"></i> ' . esc_html($file_name) . '</a>';
+                            } else if (is_string($file) && !empty($file)) {
+                                // Handle string URL format
+                                $file_url = trim($file);
+                                $links[] = '<a href="' . esc_url($file_url) . '" target="_blank" class="gfcv-file-link"><i class="dashicons dashicons-media-document"></i> ' . basename($file_url) . '</a>';
+                            }
+                        }
+                        
+                        if (!empty($links)) {
+                            $field_value = '<div class="gfcv-file-uploads">' . implode('<br>', $links) . '</div>';
+                        } else {
+                            $field_value = '';
+                        }
+                    } else {
+                        $field_value = '';
+                    }
+                }
+                // Handle List fields
+                elseif ($field->type === 'list') {
+                    if (!empty($field_value)) {
+                        if (is_array($field_value)) {
+                            $field_value = '<ul>';
+                            foreach ($field_value as $item) {
+                                if (is_array($item)) {
+                                    $field_value .= '<li>' . implode(' | ', array_map('esc_html', $item)) . '</li>';
+                                } else {
+                                    $field_value .= '<li>' . esc_html($item) . '</li>';
+                                }
+                            }
+                            $field_value .= '</ul>';
+                        } else {
+                            $field_value = esc_html($field_value);
+                        }
+                    } else {
+                        $field_value = '';
+                    }
+                }
+                // Handle Checkbox fields
+                elseif ($field->type === 'checkbox') {
+                    if (!empty($field_value)) {
+                        if (is_array($field_value)) {
+                            $field_value = implode(', ', array_map('esc_html', $field_value));
+                        } else {
+                            $field_value = esc_html($field_value);
+                        }
+                    } else {
+                        $field_value = '';
+                    }
+                }
                 $processed = str_replace($merge_tag, $field_value, $processed);
             }
         }

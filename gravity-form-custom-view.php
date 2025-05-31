@@ -3,7 +3,7 @@
  * Plugin Name: نمایش رکوردهای گرویتی فرم با تعیین سطح دسترسی
  * Description: ایجاد لیست قابل مدیریت در گرویتی فرم با توجه به سطح دسترسی کاربران
  * Plugin URI: https://rahkar-digital.ir
- * Version: 1.2
+ * Version: 1.3
  * Author: مسعود وحید
  * Author URI: https://rahkar-digital.ir
  * Text Domain: gravity-form-custom-view

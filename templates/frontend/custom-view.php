@@ -73,8 +73,11 @@ $paged_entries = array_slice($entries, $offset, $per_page);
 <div class="gfcv-modal" id="gfcv-modal-details" style="display: none;">
     <div class="gfcv-modal-content">
         <span class="gfcv-modal-close">&times;</span>
-        <h2><?php _e('Entry Details', 'gravity-form-custom-view'); ?></h2>
+        <h2><?php _e('مشاهده جزئیات', 'gravity-form-custom-view'); ?></h2>
         <div class="gfcv-modal-body"></div>
+        <div class="gfcv-modal-footer">
+            <button type="button" class="gfcv-btn gfcv-btn-print"><i class="dashicons dashicons-printer"></i> <?php _e('چاپ', 'gravity-form-custom-view'); ?></button>
+        </div>
     </div>
 </div>
 
