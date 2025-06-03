@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 <?php
 // Get pagination parameters
 $current_page = isset($_GET['gfcv_page']) ? max(1, intval($_GET['gfcv_page'])) : 1;
-$per_page = isset($atts['per_page']) ? absint($atts['per_page']) : 10; // Number of entries per page
+$per_page = 10; // Fixed at 10 records per page
 $total_entries = count($entries);
 $total_pages = ceil($total_entries / $per_page);
 
@@ -43,9 +43,10 @@ $paged_entries = array_slice($entries, $offset, $per_page);
                     <td colspan="<?php echo count($field_ids) + 3; ?>"><?php _e('هیچ موردی یافت نشد.', 'gravity-form-custom-view'); ?></td>
                 </tr>
             <?php else : ?>
+                <?php $row_number = $offset + 1; ?>
                 <?php foreach ($paged_entries as $entry) : ?>
                     <tr data-entry-id="<?php echo esc_attr($entry['id']); ?>">
-                        <td><?php echo esc_html($offset + $loop->index + 1); ?></td>
+                        <td><?php echo esc_html($row_number++); ?></td>
                         <td><?php echo esc_html($entry['id']); ?></td>
                         
                         <?php foreach ($field_ids as $field_id) : ?>

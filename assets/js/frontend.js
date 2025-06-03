@@ -146,7 +146,7 @@
             printWindow.document.write('<link rel="stylesheet" href="' + gfcv_vars.ajax_url.replace('admin-ajax.php', '') + 'wp-includes/css/dashicons.min.css">');
              
             // Add Vazirmatn font with Farsi numbers from Google Fonts
-            printWindow.document.write('<link rel="preconnect" href="https://fonts.googleapis.com">'); 
+            printWindow.document.write('<link rel="preconnect" href="https://fonts.googleapis.com">');
             printWindow.document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">');
             
             // Add custom print styles
@@ -168,7 +168,7 @@
             
             printWindow.document.write('</head><body dir="rtl">');
             // Add a title to the print view
-            printWindow.document.write('<h1 style="text-align: center; margin-bottom: 20px; font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;">' + entryId + '</h1>');
+            printWindow.document.write('<h1 style="text-align: center; margin-bottom: 20px; font-family: \'Vazirmatn\', Tahoma, Arial, sans-serif;">' + entryId + '</h1>');
             // Add the content
             printWindow.document.write('<div class="gfcv-print-content">' + modalContent + '</div>');
             printWindow.document.write('</body></html>');
@@ -179,8 +179,8 @@
             // Wait for resources to load before triggering print
             setTimeout(function() {
                 printWindow.focus();
-                printWindow.print();
-            }, 1000);
+                // printWindow.print();
+            }, 2000);
         });
     });
     
