@@ -416,7 +416,71 @@ class GFCV_Shortcode {
                 // Handle List fields
                 elseif ($field->type === 'list') {
                     if (!empty($field_value)) {
-                        if (is_array($field_value)) {
+                        // Check if the value is a serialized string
+                        if (is_string($field_value) && strpos($field_value, 'a:') === 0) {
+                            // Try to unserialize the data
+                            $unserialized_data = @unserialize($field_value);
+                            
+                            if ($unserialized_data !== false) {
+                                // Successfully unserialized
+                                $field_value = '<table class="gfcv-list-table">';
+                                
+                                // Check if it's a multi-column list
+                                $is_multi_column = false;
+                                $column_headers = array();
+                                
+                                // Determine if it's a multi-column list and get column headers
+                                if (!empty($unserialized_data) && is_array($unserialized_data)) {
+                                    $first_item = reset($unserialized_data);
+                                    if (is_array($first_item) && !empty($first_item)) {
+                                        $is_multi_column = true;
+                                        // If columns are enabled, use field choices for headers
+                                        if (!empty($field->choices) && is_array($field->choices)) {
+                                            foreach ($field->choices as $choice) {
+                                                $column_headers[] = $choice['text'];
+                                            }
+                                        } else {
+                                            // Use keys as headers if no choices defined
+                                            $column_headers = array_keys($first_item);
+                                        }
+                                    }
+                                }
+                                
+                                // Add table headers for multi-column lists
+                                if ($is_multi_column && !empty($column_headers)) {
+                                    $field_value .= '<thead><tr>';
+                                    foreach ($column_headers as $header) {
+                                        $field_value .= '<th>' . esc_html($header) . '</th>';
+                                    }
+                                    $field_value .= '</tr></thead>';
+                                }
+                                
+                                $field_value .= '<tbody>';
+                                
+                                // Process each row
+                                foreach ($unserialized_data as $row) {
+                                    $field_value .= '<tr>';
+                                    
+                                    if ($is_multi_column && is_array($row)) {
+                                        // Multi-column list
+                                        foreach ($row as $cell) {
+                                            $field_value .= '<td>' . esc_html($cell) . '</td>';
+                                        }
+                                    } else {
+                                        // Single column list
+                                        $field_value .= '<td>' . esc_html($row) . '</td>';
+                                    }
+                                    
+                                    $field_value .= '</tr>';
+                                }
+                                
+                                $field_value .= '</tbody></table>';
+                            } else {
+                                // Failed to unserialize, display raw
+                                $field_value = esc_html($field_value);
+                            }
+                        } else if (is_array($field_value)) {
+                            // Already an array (may happen in some contexts)
                             $field_value = '<ul>';
                             foreach ($field_value as $item) {
                                 if (is_array($item)) {
@@ -427,6 +491,7 @@ class GFCV_Shortcode {
                             }
                             $field_value .= '</ul>';
                         } else {
+                            // Just a string, display as is
                             $field_value = esc_html($field_value);
                         }
                     } else {

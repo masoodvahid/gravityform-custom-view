@@ -179,7 +179,7 @@
             // Wait for resources to load before triggering print
             setTimeout(function() {
                 printWindow.focus();
-                // printWindow.print();
+                printWindow.print();
             }, 2000);
         });
     });
