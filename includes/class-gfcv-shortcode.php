@@ -146,8 +146,61 @@ class GFCV_Shortcode {
             return '<p>' . __('API گرویتی فرم در دسترس نیست', 'gravity-form-custom-view') . '</p>';
         }
         
-        $entries = GFAPI::get_entries($view->form_id);
+        // Pagination parameters
+        $current_page = isset($_GET['gfcv_page']) ? absint($_GET['gfcv_page']) : 1;
+        $offset = ($current_page - 1) * $per_page;
+
+        // Search criteria for GFAPI::get_entries
+        $search_criteria = array(
+            'status'        => 'active',
+            'field_filters' => array(), // Add any field filters if needed
+        );
+
+        // Paging parameters for GFAPI::get_entries
+        $paging = array(
+            'offset'    => $offset,
+            'page_size' => $per_page
+        );
+
+        // Sorting parameters (get the latest entries first)
+        $sorting = array('key' => 'date_created', 'direction' => 'DESC');
+
+        // Get total number of entries for pagination (limited to the last 20 for display)
+        // We first get the IDs of the last 20 entries
+        $total_entries_for_display_query = GFAPI::get_entries(
+            $view->form_id,
+            array('status' => 'active'), // Basic criteria to count relevant entries
+            array('key' => 'date_created', 'direction' => 'DESC'),
+            array('offset' => 0, 'page_size' => 20) // Get only the last 20
+        );
+
+        $total_entries_for_pagination = 0;
+        if (!is_wp_error($total_entries_for_display_query)) {
+            $total_entries_for_pagination = count($total_entries_for_display_query) > 20 ? 20 : count($total_entries_for_display_query);
+        } else {
+            // Handle error if needed, though for count it might not be critical
+            $total_entries_for_pagination = 0;
+        }
         
+        // If current page requests entries beyond the last 20, adjust offset to stay within the last 20
+        // For example, if per_page is 10, and we only show last 20, max page is 2.
+        // If user tries to access page 3, we should show page 2 or an empty set.
+        // The total_entries_for_pagination already caps at 20.
+        $max_pages_for_display = ceil($total_entries_for_pagination / $per_page);
+        if ($current_page > $max_pages_for_display && $max_pages_for_display > 0) {
+            $current_page = $max_pages_for_display;
+            $offset = ($current_page - 1) * $per_page;
+            $paging['offset'] = $offset;
+        }
+
+        // Get entries for the current page, from the latest 20
+        $entries = GFAPI::get_entries($view->form_id, $search_criteria, $sorting, $paging);
+
+        // We only want to paginate through the latest 20 entries.
+        // So, if $entries has more than 20, we slice it.
+        // However, the $paging and $total_entries_for_display_query should handle this.
+        // Let's ensure $entries are capped at $per_page for the current page, within the 20 overall.
+
         if (is_wp_error($entries)) {
             return '<p>' . __('خطا در بازیابی اطلاعات فرم', 'gravity-form-custom-view') . '</p>';
         }
@@ -500,6 +553,8 @@ class GFCV_Shortcode {
                 }
                 // Handle Checkbox fields
                 elseif ($field->type === 'checkbox') {
+                    error_log('GFCV Debug: Checkbox Field ID: ' . $field_id);
+                    error_log('GFCV Debug: Raw Checkbox Field Value: ' . print_r($field_value, true));
                     if (!empty($field_value)) {
                         if (is_array($field_value)) {
                             $field_value = implode(', ', array_map('esc_html', $field_value));
@@ -518,7 +573,8 @@ class GFCV_Shortcode {
         $processed = str_replace('{entry_id}', $entry['id'], $processed);
         
         // Replace date created
-        $processed = str_replace('{date_created}', $entry['date_created'], $processed);
+        $date_created_formatted = date_i18n('Y/m/d', strtotime($entry['date_created']));
+            $processed = str_replace('{date_created}', $date_created_formatted, $processed);
         
         return $processed;
     }

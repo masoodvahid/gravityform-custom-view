@@ -132,12 +132,10 @@
             }
         });
         // Print Preview button click for details modal
-        $(document).on('click', '.gfcv-btn-print', function() {
-            var entryId = $('#gfcv-modal-details h2').text() || 'Entry Details';
-            var modalContent = $('#gfcv-modal-details .gfcv-modal-body').html();
+        $(document).on('click', '.gfcv-btn-print', function() {    
             var printWindow = window.open('', '', 'height=600,width=800');
-            
-            printWindow.document.write('<html><head><title>' + entryId + '</title>');
+            var modalContent = $('.gfcv-modal-body').html();
+            printWindow.document.write('<html><head><title>Print Preview</title>');
             // Include all necessary stylesheets
             printWindow.document.write('<link rel="stylesheet" href="' + gfcv_vars.frontend_css_url + '">');
             printWindow.document.write('<link rel="stylesheet" href="' + gfcv_vars.custom_buttons_css_url + '">');
@@ -167,8 +165,6 @@
             printWindow.document.write('</style>');
             
             printWindow.document.write('</head><body dir="rtl">');
-            // Add a title to the print view
-            printWindow.document.write('<h1 style="text-align: center; margin-bottom: 20px; font-family: \'Vazirmatn\', Tahoma, Arial, sans-serif;">' + entryId + '</h1>');
             // Add the content
             printWindow.document.write('<div class="gfcv-print-content">' + modalContent + '</div>');
             printWindow.document.write('</body></html>');

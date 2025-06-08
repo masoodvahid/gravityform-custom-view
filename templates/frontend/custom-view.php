@@ -12,17 +12,25 @@ if (!defined('ABSPATH')) {
 }
 ?>
 <?php
-// Get pagination parameters
-$current_page = isset($_GET['gfcv_page']) ? max(1, intval($_GET['gfcv_page'])) : 1;
-$per_page = 10; // Fixed at 10 records per page
-$total_entries = count($entries);
-$total_pages = ceil($total_entries / $per_page);
+// Pagination parameters are now mostly handled in class-gfcv-shortcode.php
+// $entries variable already contains the paged entries (max 10 for the current page, from the latest 20 overall)
+// $total_entries_for_pagination (max 20) is available from the shortcode rendering function
+// $per_page is available from the shortcode rendering function
+// $current_page is available from the shortcode rendering function
 
-// Slice the entries array for the current page
-$offset = ($current_page - 1) * $per_page;
-$paged_entries = array_slice($entries, $offset, $per_page);
+$total_pages = 0;
+if ($per_page > 0) {
+    $total_pages = ceil($total_entries_for_pagination / $per_page);
+}
+
+// $paged_entries is now just $entries, as it's already paged.
+$paged_entries = $entries;
+$offset = ($current_page - 1) * $per_page; // Still needed for row numbering
 ?>
 <div class="gfcv-container" data-view-id="<?php echo esc_attr($view->id); ?>">
+    <div class="gfcv-total-entries">
+        <?php printf(__('نمایش %1$s از %2$s مورد', 'gravity-form-custom-view'), count($paged_entries), $total_entries_for_pagination); ?>
+    </div>
     <table class="gfcv-table">
         <thead>
             <tr>
@@ -38,12 +46,12 @@ $paged_entries = array_slice($entries, $offset, $per_page);
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($entries)) : ?>
+            <?php if (empty($paged_entries)) : ?>
                 <tr>
                     <td colspan="<?php echo count($field_ids) + 3; ?>"><?php _e('هیچ موردی یافت نشد.', 'gravity-form-custom-view'); ?></td>
                 </tr>
             <?php else : ?>
-                <?php $row_number = $offset + 1; ?>
+                <?php $row_number = $offset + 1; // $offset is calculated above ?>
                 <?php foreach ($paged_entries as $entry) : ?>
                     <tr data-entry-id="<?php echo esc_attr($entry['id']); ?>">
                         <td><?php echo esc_html($row_number++); ?></td>
@@ -73,8 +81,7 @@ $paged_entries = array_slice($entries, $offset, $per_page);
 <!-- Modal Templates -->
 <div class="gfcv-modal" id="gfcv-modal-details" style="display: none;">
     <div class="gfcv-modal-content">
-        <span class="gfcv-modal-close">&times;</span>
-        <h2><?php _e('مشاهده جزئیات', 'gravity-form-custom-view'); ?></h2>
+        <span class="gfcv-modal-close">&times;</span>        
         <div class="gfcv-modal-body"></div>
         <div class="gfcv-modal-footer">
             <button type="button" class="gfcv-btn gfcv-btn-print"><i class="dashicons dashicons-printer"></i> <?php _e('چاپ', 'gravity-form-custom-view'); ?></button>
@@ -132,6 +139,7 @@ $paged_entries = array_slice($entries, $offset, $per_page);
 <?php endif; ?>
 
 <script type="text/javascript">
+// The existing script for modals is fine, no changes needed here.
 jQuery(document).ready(function($) {
     // Details button click
     $('.gfcv-btn-details').on('click', function() {

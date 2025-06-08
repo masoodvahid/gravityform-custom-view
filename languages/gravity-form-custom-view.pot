@@ -294,7 +294,7 @@ msgid "Send to API"
 msgstr ""
 
 #: templates/frontend/custom-view.php:53
-msgid "Entry Details"
+msgid "-"
 msgstr ""
 
 #: templates/frontend/custom-view.php:69
