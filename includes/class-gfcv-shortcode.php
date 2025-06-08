@@ -165,41 +165,22 @@ class GFCV_Shortcode {
         // Sorting parameters (get the latest entries first)
         $sorting = array('key' => 'date_created', 'direction' => 'DESC');
 
-        // Get total number of entries for pagination (limited to the last 20 for display)
-        // We first get the IDs of the last 20 entries
-        $total_entries_for_display_query = GFAPI::get_entries(
+        // Get total number of entries for pagination
+        $total_entries_for_pagination = GFAPI::count_entries(
             $view->form_id,
-            array('status' => 'active'), // Basic criteria to count relevant entries
-            array('key' => 'date_created', 'direction' => 'DESC'),
-            array('offset' => 0, 'page_size' => 20) // Get only the last 20
+            $search_criteria
         );
-
-        $total_entries_for_pagination = 0;
-        if (!is_wp_error($total_entries_for_display_query)) {
-            $total_entries_for_pagination = count($total_entries_for_display_query) > 20 ? 20 : count($total_entries_for_display_query);
-        } else {
-            // Handle error if needed, though for count it might not be critical
-            $total_entries_for_pagination = 0;
-        }
         
-        // If current page requests entries beyond the last 20, adjust offset to stay within the last 20
-        // For example, if per_page is 10, and we only show last 20, max page is 2.
-        // If user tries to access page 3, we should show page 2 or an empty set.
-        // The total_entries_for_pagination already caps at 20.
-        $max_pages_for_display = ceil($total_entries_for_pagination / $per_page);
-        if ($current_page > $max_pages_for_display && $max_pages_for_display > 0) {
-            $current_page = $max_pages_for_display;
+        // Adjust current page and offset if it exceeds total pages
+        $total_pages = ceil($total_entries_for_pagination / $per_page);
+        if ($current_page > $total_pages && $total_pages > 0) {
+            $current_page = $total_pages;
             $offset = ($current_page - 1) * $per_page;
             $paging['offset'] = $offset;
         }
 
-        // Get entries for the current page, from the latest 20
+        // Get entries for the current page
         $entries = GFAPI::get_entries($view->form_id, $search_criteria, $sorting, $paging);
-
-        // We only want to paginate through the latest 20 entries.
-        // So, if $entries has more than 20, we slice it.
-        // However, the $paging and $total_entries_for_display_query should handle this.
-        // Let's ensure $entries are capped at $per_page for the current page, within the 20 overall.
 
         if (is_wp_error($entries)) {
             return '<p>' . __('خطا در بازیابی اطلاعات فرم', 'gravity-form-custom-view') . '</p>';
@@ -577,6 +558,18 @@ class GFCV_Shortcode {
             $processed = str_replace('{date_created}', $date_created_formatted, $processed);
         
         return $processed;
+    }
+
+    /**
+     * Converts Arabic/Latin digits in a string to Farsi digits.
+     *
+     * @param string $string The input string.
+     * @return string The string with Farsi digits.
+     */
+    private function convert_to_farsi_numbers($string) {
+        $farsi_digits = array('۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹');
+        $latin_digits = array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+        return str_replace($latin_digits, $farsi_digits, $string);
     }
     
     /**

@@ -135,7 +135,8 @@
         $(document).on('click', '.gfcv-btn-print', function() {    
             var printWindow = window.open('', '', 'height=600,width=800');
             var modalContent = $('.gfcv-modal-body').html();
-            printWindow.document.write('<html><head><title>Print Preview</title>');
+			var modalTitle = $('#invest-number').text() + '-' + $('#invest-name').text();
+            printWindow.document.write('<html><head><title>'+ modalTitle +'</title>');
             // Include all necessary stylesheets
             printWindow.document.write('<link rel="stylesheet" href="' + gfcv_vars.frontend_css_url + '">');
             printWindow.document.write('<link rel="stylesheet" href="' + gfcv_vars.custom_buttons_css_url + '">');
@@ -145,7 +146,7 @@
              
             // Add Vazirmatn font with Farsi numbers from Google Fonts
             printWindow.document.write('<link rel="preconnect" href="https://fonts.googleapis.com">');
-            printWindow.document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">');
+            printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">');
             
             // Add custom print styles
             printWindow.document.write('<style>');
