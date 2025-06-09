@@ -430,7 +430,7 @@ class GFCV_Shortcode {
                                 // Handle JSON format from multi-file upload
                                 $file_url = $file['url'];
                                 $file_name = isset($file['name']) ? $file['name'] : basename($file_url);
-                                $links[] = '<a href="' . esc_url($file_url) . '" target="_blank" class="gfcv-file-link"><i class="dashicons dashicons-media-document"></i> ' . esc_html($file_name) . '</a>';
+                                $links[] = '<a href="' . esc_url($file_url) . '" target="_blank" class="gfcv-file-link">' . basename($file_url) . '</a>';
                             } else if (is_string($file) && !empty($file)) {
                                 // Handle string URL format
                                 $file_url = trim($file);
@@ -535,26 +535,73 @@ class GFCV_Shortcode {
                 // Handle Checkbox fields
                 elseif ($field->type === 'checkbox') {
                     error_log('GFCV Debug: Checkbox Field ID: ' . $field_id);
-                    error_log('GFCV Debug: Raw Checkbox Field Value: ' . print_r($field_value, true));
-                    if (!empty($field_value)) {
-                        if (is_array($field_value)) {
-                            $field_value = implode(', ', array_map('esc_html', $field_value));
-                        } else {
-                            $field_value = esc_html($field_value);
+                    error_log('GFCV Debug: Raw Checkbox Field Value for field ' . $field_id . ': ' . print_r(rgar($entry, $field_id), true));
+
+                    $selected_values = [];
+                    if (isset($field->choices) && is_array($field->choices)) {
+                        foreach ($field->choices as $choice) {
+                            // Checkbox field IDs are like 37.1, 37.2, etc.
+                            // The rgar($entry, $field_id . '.' . $choice_index) approach is more robust
+                            // but for simplicity, we'll check if the choice value is present in the entry data for that field_id
+                            $choice_field_id_parts = explode('.', $choice['value']);
+                            $main_field_id_for_choice = $choice_field_id_parts[0];
+
+                            if (strval($main_field_id_for_choice) === strval($field_id)) {
+                                $field_input_id = $field_id . '.' . (isset($choice_field_id_parts[1]) ? $choice_field_id_parts[1] : '1');
+                                // For checkboxes, the entry stores the selected choice's *text* if "Enable values" is not used,
+                                // or the choice's *value* if "Enable values" is used.
+                                // We need to find the choice text based on what's stored.
+                                $entry_field_value = rgar($entry, $field_input_id);
+                                if (!empty($entry_field_value)) {
+                                    // If "Enable values" is used, $entry_field_value is the choice's 'value'.
+                                    // If not, $entry_field_value is the choice's 'text'.
+                                    // We want to display the choice's 'text'.
+                                    if ($entry_field_value === $choice['value'] || $entry_field_value === $choice['text']) {
+                                        $selected_values[] = esc_html($choice['text']);
+                                    }
+                                }
+                            }
                         }
+                    }
+
+                    if (!empty($selected_values)) {
+                        $field_value = implode(', ', $selected_values);
+                        error_log('GFCV Debug: Processed Checkbox Value for field ' . $field_id . ': ' . $field_value);
+                    } else {
+                        // Fallback for cases where choices might not be structured as expected or value is simple
+                        $raw_value = rgar($entry, (string)$field_id);
+                        if (is_array($raw_value)) {
+                             // This case might occur if the field stores an array of selected values directly (less common for checkboxes)
+                            $field_value = implode(', ', array_map('esc_html', array_filter($raw_value)));
+                        } elseif (!empty($raw_value)){
+                            $field_value = esc_html($raw_value);
+                        } else {
+                            $field_value = '';
+                        }
+                        error_log('GFCV Debug: Fallback Checkbox Value for field ' . $field_id . ': ' . $field_value);
+                    }
+                }
+                // Handle Select fields
+                elseif ($field->type === 'select') {
+                    error_log('GFCV Debug: Select Field ID: ' . $field_id);
+                    error_log('GFCV Debug: Raw Select Field Value: ' . print_r($field_value, true));
+                    if (!empty($field_value)) {
+                        $field_value = esc_html($field_value);
                     } else {
                         $field_value = '';
                     }
                 }
+                // Convert numbers to Farsi digits for all field values                
                 $processed = str_replace($merge_tag, $field_value, $processed);
             }
         }
         
         // Replace entry ID
-        $processed = str_replace('{entry_id}', $entry['id'], $processed);
+        $processed = str_replace('{entry_id}', $this->convert_to_farsi_numbers($entry['id']), $processed);
         
         // Replace date created
         $date_created_formatted = date_i18n('Y/m/d', strtotime($entry['date_created']));
+        $date_created_formatted = $this->convert_to_farsi_numbers($date_created_formatted);
             $processed = str_replace('{date_created}', $date_created_formatted, $processed);
         
         return $processed;

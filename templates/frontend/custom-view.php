@@ -64,11 +64,11 @@ $offset = ($current_page - 1) * $per_page; // Still needed for row numbering
                         <?php endforeach; ?>
                         <td><?php echo esc_html(GFCommon::format_date($entry['date_created'], false, 'Y/m/d')); ?></td>
                         <td class="gfcv-actions">
-                            <button type="button" class="gfcv-btn gfcv-btn-details"><i class="dashicons dashicons-visibility"></i> <?php _e('مشاهده جزئیات', 'gravity-form-custom-view'); ?></button>
-                            <button type="button" class="gfcv-btn gfcv-btn-user-sms"><i class="dashicons dashicons-smartphone"></i> <?php _e('پیامک کاربر', 'gravity-form-custom-view'); ?></button>
-                            <button type="button" class="gfcv-btn gfcv-btn-admin-sms"><i class="dashicons dashicons-admin-users"></i> <?php _e('پیامک مدیر', 'gravity-form-custom-view'); ?></button>
+                            <button type="button" class="gfcv-btn gfcv-btn-details"><i class="dashicons dashicons-search"></i></button>
+                            <button type="button" class="gfcv-btn"><i class="dashicons dashicons-email"></i></button>
+                            <button type="button" class="gfcv-btn"><i class="dashicons dashicons-admin-users"></i></button>
                             <?php if ($view->send_to_api) : ?>
-                                <button type="button" class="gfcv-btn gfcv-btn-api"><i class="dashicons dashicons-rest-api"></i> <?php _e('ارسال به API', 'gravity-form-custom-view'); ?></button>
+                                <button type="button" class="gfcv-btn"><i class="dashicons dashicons-rest-api"></i></button>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -81,10 +81,13 @@ $offset = ($current_page - 1) * $per_page; // Still needed for row numbering
 <!-- Modal Templates -->
 <div class="gfcv-modal" id="gfcv-modal-details" style="display: none;">
     <div class="gfcv-modal-content">
-        <span class="gfcv-modal-close">&times;</span>        
+        <span class="gfcv-modal-close">&times;</span> 
+        <div class="gfcv-modal-header">
+            <button type="button" class="gfcv-btn gfcv-btn-print"><i class="dashicons dashicons-printer"></i></button>
+        </div> 
         <div class="gfcv-modal-body"></div>
         <div class="gfcv-modal-footer">
-            <button type="button" class="gfcv-btn gfcv-btn-print"><i class="dashicons dashicons-printer"></i> <?php _e('چاپ', 'gravity-form-custom-view'); ?></button>
+            <button type="button" class="gfcv-btn gfcv-btn-print"><i class="dashicons dashicons-printer"></i>پبش نمایش چاپ و PDF</button>
         </div>
     </div>
 </div>
