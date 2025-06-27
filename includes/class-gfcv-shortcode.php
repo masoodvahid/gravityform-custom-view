@@ -533,54 +533,28 @@ class GFCV_Shortcode {
                     }
                 }
                 // Handle Checkbox fields
-                elseif ($field->type === 'checkbox') {
-                    error_log('GFCV Debug: Checkbox Field ID: ' . $field_id);
-                    error_log('GFCV Debug: Raw Checkbox Field Value for field ' . $field_id . ': ' . print_r(rgar($entry, $field_id), true));
+               elseif ($field->type === 'checkbox') {
+					$output = '<div class="gfcv-checkbox-field">';
+					if (!empty($field->choices) && is_array($field->choices)) {
+						foreach ($field->choices as $index => $choice) {
+							$input_id = $field->id . '.' . ($index + 1);
+							$value = rgar($entry, $input_id);
 
-                    $selected_values = [];
-                    if (isset($field->choices) && is_array($field->choices)) {
-                        foreach ($field->choices as $choice) {
-                            // Checkbox field IDs are like 37.1, 37.2, etc.
-                            // The rgar($entry, $field_id . '.' . $choice_index) approach is more robust
-                            // but for simplicity, we'll check if the choice value is present in the entry data for that field_id
-                            $choice_field_id_parts = explode('.', $choice['value']);
-                            $main_field_id_for_choice = $choice_field_id_parts[0];
+							$is_checked = (!empty($value) && ($value === $choice['value'] || $value === $choice['text']));
+							$checked_attr = $is_checked ? 'checked' : '';
 
-                            if (strval($main_field_id_for_choice) === strval($field_id)) {
-                                $field_input_id = $field_id . '.' . (isset($choice_field_id_parts[1]) ? $choice_field_id_parts[1] : '1');
-                                // For checkboxes, the entry stores the selected choice's *text* if "Enable values" is not used,
-                                // or the choice's *value* if "Enable values" is used.
-                                // We need to find the choice text based on what's stored.
-                                $entry_field_value = rgar($entry, $field_input_id);
-                                if (!empty($entry_field_value)) {
-                                    // If "Enable values" is used, $entry_field_value is the choice's 'value'.
-                                    // If not, $entry_field_value is the choice's 'text'.
-                                    // We want to display the choice's 'text'.
-                                    if ($entry_field_value === $choice['value'] || $entry_field_value === $choice['text']) {
-                                        $selected_values[] = esc_html($choice['text']);
-                                    }
-                                }
-                            }
-                        }
-                    }
+							$output .= '<label style="display:inline-block; margin: 5px;">';
+							$output .= '<input type="checkbox" onclick="return false;" ' . $checked_attr . '> ';
+							$output .= esc_html($choice['text']);
+							$output .= '</label>';
+						}
+					}
+					$output .= '</div>';
+					$field_value = $output;
+				}
+					
 
-                    if (!empty($selected_values)) {
-                        $field_value = implode(', ', $selected_values);
-                        error_log('GFCV Debug: Processed Checkbox Value for field ' . $field_id . ': ' . $field_value);
-                    } else {
-                        // Fallback for cases where choices might not be structured as expected or value is simple
-                        $raw_value = rgar($entry, (string)$field_id);
-                        if (is_array($raw_value)) {
-                             // This case might occur if the field stores an array of selected values directly (less common for checkboxes)
-                            $field_value = implode(', ', array_map('esc_html', array_filter($raw_value)));
-                        } elseif (!empty($raw_value)){
-                            $field_value = esc_html($raw_value);
-                        } else {
-                            $field_value = '';
-                        }
-                        error_log('GFCV Debug: Fallback Checkbox Value for field ' . $field_id . ': ' . $field_value);
-                    }
-                }
+				
                 // Handle Select fields
                 elseif ($field->type === 'select') {
                     error_log('GFCV Debug: Select Field ID: ' . $field_id);
