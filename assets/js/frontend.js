@@ -144,17 +144,17 @@
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@33.003/misc/Farsi-Digits/Vazirmatn-FD-font-face.css" rel="stylesheet"></link>');
                          
              printWindow.document.write('<style>');
-            printWindow.document.write('body, .gfcv-modal-body, th, td, h1, h2, h3, h4, h5, h6 { font-family: Vazirmatn FD, sans-serif !important; }');            
-            printWindow.document.write('body { direction: rtl; padding: 20px; }');
+            printWindow.document.write('body, .gfcv-modal-body, th, td, h1, h2, h3, h4, h5, h6 { font-family: B Nazanin, sans-serif !important; font-size:100% }');            
+            printWindow.document.write('body { direction: rtl; padding: 10px; }');
             printWindow.document.write('.gfcv-modal-body { margin: 0 auto; max-width: 800px; }');
             printWindow.document.write('.gfcv-file-uploads { margin: 10px 0; }');
-            printWindow.document.write('.gfcv-file-link { display: inline-flex; align-items: center; margin: 1px 0; padding: 5px; background-color: #f5f5f5; border-radius: 4px; text-decoration: none; color: #333; }');
-            printWindow.document.write('.gfcv-file-link .dashicons { margin-right: 5px; color: #0073aa; }');
-            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-bottom: 10px; page-break-inside: avoid; }');
-            printWindow.document.write('table, th, td { border: 2px solid #000; vertical-align: top;  }');
-            printWindow.document.write('th, td { padding: 6px; text-align: right; font-family: Vazirmatn FD, Tahoma, Arial, sans-serif; }');
+            printWindow.document.write('.gfcv-file-link { display: inline-flex; align-items: center; margin: 1px 0; padding: 2px; background-color: #f5f5f5; border-radius: 4px; text-decoration: none; color: #333; }');
+            printWindow.document.write('.gfcv-file-link .dashicons {color: #0073aa; }');
+            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-bottom: 10px; page-break-inside: avoid;}');
+            printWindow.document.write('table, th, td { border: 1px solid #000; vertical-align: top;  }');
+            printWindow.document.write('th, td { padding: 7px; text-align: right; font-family: B Nazanin, Tahoma, Arial, sans-serif; font-size: 110%;}');
             printWindow.document.write('th { background-color: #f5f5f5; }');
-            printWindow.document.write('h1, h2, h3, h4, h5, h6, p, span, div, table { font-family: Vazirmatn FD, Tahoma, Arial, sans-serif; }');
+            printWindow.document.write('h1, h2, h3, h4, h5, h6, p, span, div, table { font-family: B Nazanin, Tahoma, Arial, sans-serif; }');
             // Enable Farsi digits for all elements
             
             printWindow.document.write('@media print { body { padding: 0; } }');
