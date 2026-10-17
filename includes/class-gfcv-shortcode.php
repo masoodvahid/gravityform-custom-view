@@ -400,6 +400,25 @@ class GFCV_Shortcode {
      * @param array $form The form data
      * @return string The processed template
      */
+    /**
+     * Text/glyph-based answer marker survives black-only printing and photocopy.
+     * The word "selected" is intentionally retained for archival clarity.
+     */
+    private function format_print_choice($label, $checked, $type) {
+        $selected_class = $checked ? ' gfcv-choice--selected' : ' gfcv-choice--unselected';
+        $mark = $checked ? '■' : '□';
+        $label_html = $checked
+            ? '<strong class="gfcv-choice-label">' . esc_html((string) $label) . '</strong>'
+            : '<span class="gfcv-choice-label">' . esc_html((string) $label) . '</span>';
+        $selected_note = $checked
+            ? '<span class="gfcv-choice-selected-note"> (انتخاب‌شده)</span>'
+            : '';
+
+        return '<span class="gfcv-choice' . $selected_class . '" data-choice-type="' . esc_attr($type) . '">'
+            . '<span class="gfcv-choice-marker" aria-hidden="true">' . $mark . '</span> '
+            . $label_html . $selected_note . '</span>';
+    }
+
     private function process_template($template, $entry, $form, $show_all_options = true) {
         // Replace merge tags
         $processed = $template;
@@ -533,7 +552,9 @@ class GFCV_Shortcode {
                         $field_value = '';
                     }
                 }
-                // Render all choices by default; selected only when disabled.
+                // Never print disabled browser inputs: their checkmarks can fade
+                // or vanish when the printer ignores form-control backgrounds.
+                // A solid black glyph and a textual label are always printable.
                 elseif ($field->type === 'checkbox') {
                     $items = array();
                     if (!empty($field->inputs) && is_array($field->inputs)) {
@@ -543,26 +564,26 @@ class GFCV_Shortcode {
                             $choice = isset($field->choices[$index]) ? $field->choices[$index] : array();
                             $label = $choice['text'] ?? ($input['label'] ?? $value);
                             if ($checked || $show_all_options) {
-                                $items[] = $show_all_options
-                                    ? '<label class="gfcv-choice"><input type="checkbox" disabled ' . ($checked ? 'checked' : '') . '> ' . esc_html($label) . '</label>'
-                                    : esc_html($label);
+                                $items[] = $this->format_print_choice($label, $checked, 'checkbox');
                             }
                         }
                     }
-                    $field_value = implode($show_all_options ? ' ' : '، ', $items);
+                    $field_value = implode(' ', $items);
                 }
-                // Radio field: display the chosen value, or all choices with selection.
                 elseif ($field->type === 'radio') {
-                    if ($show_all_options && !empty($field->choices)) {
+                    if (!empty($field->choices)) {
                         $items = array();
                         foreach ($field->choices as $choice) {
                             $choice_value = $choice['value'] ?? $choice['text'];
-                            $checked = (string)$choice_value === (string)$field_value;
-                            $items[] = '<label class="gfcv-choice"><input type="radio" disabled ' . ($checked ? 'checked' : '') . '> ' . esc_html($choice['text']) . '</label>';
+                            $checked = (string) $choice_value === (string) $field_value
+                                || (string) $choice['text'] === (string) $field_value;
+                            if ($checked || $show_all_options) {
+                                $items[] = $this->format_print_choice($choice['text'], $checked, 'radio');
+                            }
                         }
                         $field_value = implode(' ', $items);
                     } else {
-                        $field_value = esc_html((string)$field_value);
+                        $field_value = esc_html((string) $field_value);
                     }
                 }
 
