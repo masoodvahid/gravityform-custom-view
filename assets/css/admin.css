@@ -1,66 +1,34 @@
-/**
- * Admin styles for Gravity Form Custom View
- */
-
-/* General admin styles */
-.gfcv-form-container {
-    margin: 20px 0;
-}
-
-/* Field list styles */
-#available_fields {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-}
-
-#field_list {
-    max-height: 200px;
-    overflow-y: auto;
-    margin-top: 10px;
-}
-
-.field-item {
-    margin-bottom: 5px;
-    padding: 5px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.field-item:last-child {
-    border-bottom: none;
-}
-
-/* CodeMirror customizations */
-.CodeMirror {
-    border: 1px solid #ddd;
-    height: 300px !important;
-}
-
-/* Shortcode display */
-.shortcode-info {
-    background-color: #f9f9f9;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    margin: 20px 0;
-}
-
-.shortcode-info code {
-    font-size: 14px;
-    background-color: #fff;
-    padding: 5px 10px;
-}
-
-/* Form table styles */
-.form-table th {
-    width: 200px;
-}
-
-/* Responsive adjustments */
-@media screen and (max-width: 782px) {
-    .form-table th {
-        width: auto;
-    }
-}
+/* GFCV Admin — responsive RTL dashboard */
+.gfcv-admin-wrap{max-width:1280px;direction:rtl;box-sizing:border-box}
+.gfcv-admin-wrap h1{font-size:26px;font-weight:750;margin:24px 0;color:#142534}
+.gfcv-admin-form{background:#fff;border:1px solid #e1e8ef;border-radius:14px;padding:12px 26px 24px;box-shadow:0 6px 24px rgba(15,40,65,.045)}
+.gfcv-admin-form .form-table{border-collapse:collapse}
+.gfcv-admin-form .form-table>tbody>tr{border-bottom:1px solid #e9eef4}
+.gfcv-admin-form .form-table>tbody>tr:last-child{border-bottom:0}
+.gfcv-admin-form .form-table th{width:215px;font-weight:700;color:#1e3447;padding:24px 12px;vertical-align:top}
+.gfcv-admin-form .form-table td{padding:19px 14px}
+.gfcv-admin-form input[type=text],.gfcv-admin-form select,.gfcv-admin-form textarea{border:1px solid #cddae5;border-radius:8px;max-width:100%}
+.gfcv-admin-form input[type=text],.gfcv-admin-form select{min-height:39px}
+.gfcv-admin-form .large-text{max-width:920px}
+.gfcv-admin-form .description{color:#697e90;line-height:1.8}
+.gfcv-field-browser,.gfcv-selector{border:1px solid #e0e8f0;background:#f8fafc;border-radius:12px;margin:12px 0;padding:16px}
+.gfcv-picker-row{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.gfcv-picker-row select{min-width:260px;flex:1}
+.gfcv-field-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;max-height:390px;overflow:auto;margin-top:14px}
+.gfcv-field-grid .field-item{width:100%;text-align:right;display:flex;align-items:flex-start;gap:9px;background:#fff;border:1px solid #dfE7ef;border-radius:9px;padding:11px;cursor:pointer;min-height:52px;font:inherit}
+.gfcv-field-grid .field-item:hover{border-color:#0f766e;background:#f2fbf9}
+.gfcv-field-grid .field-item.is-selected{background:#ecfdf5;border-color:#63bda9}
+.gfcv-field-grid .field-item code{font-size:12px;color:#0f766e;background:#e4f6f1;border-radius:6px;padding:3px 5px;flex:none}
+.gfcv-field-grid .field-item span{line-height:1.6;min-width:0;overflow-wrap:anywhere}
+.gfcv-selected-fields{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.gfcv-selected-chip{display:inline-flex;gap:9px;align-items:center;background:#e6f4f1;color:#13564d;padding:7px 11px;border-radius:999px}
+.gfcv-remove-chip{border:0;background:transparent;cursor:pointer;color:#9a2737;font-size:17px;font-weight:bold}
+.gfcv-setting{display:flex;gap:8px;align-items:center;padding:8px 0;font-weight:600}
+.gfcv-setting input{margin:0 0 0 8px}
+.gfcv-admin-form .CodeMirror{border:1px solid #d5e0e9;border-radius:8px;height:280px}
+.gfcv-sms-preview{direction:ltr;text-align:left;max-width:760px;white-space:pre-wrap;word-break:break-word;border:1px solid #dbe6ed;background:#f7f9fc;border-radius:8px;padding:14px}
+#gfcv_sms_test_result{margin-top:12px;line-height:1.8}
+.gfcv-admin-wrap .button-primary{border-radius:7px}
+@media(max-width:1100px){.gfcv-field-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:780px){.gfcv-admin-form{padding:10px}.gfcv-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gfcv-admin-form .form-table th,.gfcv-admin-form .form-table td{display:block;width:100%;padding:10px 6px}.gfcv-picker-row select{min-width:0}}
+@media(max-width:460px){.gfcv-field-grid{grid-template-columns:minmax(0,1fr)}}
