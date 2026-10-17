@@ -92,6 +92,7 @@ class GFCV_Admin {
             GFCV_PLUGIN_VERSION,
             true
         );
+        wp_localize_script('gfcv-admin-scripts', 'gfcvAdminData', array('smsNonce' => wp_create_nonce('gfcv_test_sms')));
     }
 
     /**
