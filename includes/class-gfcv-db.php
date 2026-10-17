@@ -66,12 +66,25 @@ class GFCV_DB {
             user_access_ids text,
             user_mobile_field_id varchar(10),
             admin_mobile_numbers text,
+            show_all_options tinyint(1) NOT NULL DEFAULT 1,
+            respect_conditional_logic tinyint(1) NOT NULL DEFAULT 1,
             date_created datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id)
         ) $charset_collate;";
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
+    }
+
+    /**
+     * dbDelta also adds the new default-on settings to existing installations.
+     * This is intentionally versioned separately from the plugin's display version.
+     */
+    public static function maybe_upgrade() {
+        if (get_option('gfcv_db_version') !== '1.5.0') {
+            self::create_tables();
+            update_option('gfcv_db_version', '1.5.0');
+        }
     }
 
     /**
