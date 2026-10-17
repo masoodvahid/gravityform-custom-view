@@ -275,8 +275,8 @@ class GFCV_Shortcode {
         $form = GFAPI::get_form($view->form_id);
         
         // Process the details view HTML
-        $details_template = GFCV_Conditional_Details::prepare($view->details_view_html, $form, $entry);
-        $details_html = $this->process_template($details_template, $entry, $form);
+        $details_template = GFCV_Conditional_Details::prepare($view->details_view_html, $form, $entry, !isset($view->respect_conditional_logic) || (bool)$view->respect_conditional_logic);
+        $details_html = $this->process_template($details_template, $entry, $form, !isset($view->show_all_options) || (bool)$view->show_all_options);
         
         wp_send_json_success(array(
             'html' => $details_html
@@ -400,7 +400,7 @@ class GFCV_Shortcode {
      * @param array $form The form data
      * @return string The processed template
      */
-    private function process_template($template, $entry, $form) {
+    private function process_template($template, $entry, $form, $show_all_options = true) {
         // Replace merge tags
         $processed = $template;
         
@@ -533,26 +533,37 @@ class GFCV_Shortcode {
                         $field_value = '';
                     }
                 }
-                // Render selected checkbox values only, and allow truly blank values
-                // to stay empty so conditional print rows can be removed.
+                // Render all choices by default; selected only when disabled.
                 elseif ($field->type === 'checkbox') {
-                    $selected = array();
+                    $items = array();
                     if (!empty($field->inputs) && is_array($field->inputs)) {
-                        foreach ($field->inputs as $input) {
+                        foreach ($field->inputs as $index => $input) {
                             $value = rgar($entry, (string) $input['id']);
-                            if ($value !== null && trim((string) $value) !== '') {
-                                $selected[] = esc_html($value);
-                            }
-                        }
-                    } elseif (!empty($field->choices)) {
-                        foreach ($field->choices as $index => $choice) {
-                            $value = rgar($entry, $field->id . '.' . ($index + 1));
-                            if ($value !== null && trim((string) $value) !== '') {
-                                $selected[] = esc_html($value);
+                            $checked = $value !== null && trim((string) $value) !== '';
+                            $choice = isset($field->choices[$index]) ? $field->choices[$index] : array();
+                            $label = $choice['text'] ?? ($input['label'] ?? $value);
+                            if ($checked || $show_all_options) {
+                                $items[] = $show_all_options
+                                    ? '<label class="gfcv-choice"><input type="checkbox" disabled ' . ($checked ? 'checked' : '') . '> ' . esc_html($label) . '</label>'
+                                    : esc_html($label);
                             }
                         }
                     }
-                    $field_value = implode('، ', $selected);
+                    $field_value = implode($show_all_options ? ' ' : '، ', $items);
+                }
+                // Radio field: display the chosen value, or all choices with selection.
+                elseif ($field->type === 'radio') {
+                    if ($show_all_options && !empty($field->choices)) {
+                        $items = array();
+                        foreach ($field->choices as $choice) {
+                            $choice_value = $choice['value'] ?? $choice['text'];
+                            $checked = (string)$choice_value === (string)$field_value;
+                            $items[] = '<label class="gfcv-choice"><input type="radio" disabled ' . ($checked ? 'checked' : '') . '> ' . esc_html($choice['text']) . '</label>';
+                        }
+                        $field_value = implode(' ', $items);
+                    } else {
+                        $field_value = esc_html((string)$field_value);
+                    }
                 }
 
                 // Handle Select fields
@@ -679,52 +690,17 @@ class GFCV_Shortcode {
      * @return array The lookup parameters
      */
     private function parse_kavenegar_pattern($pattern, $entry, $form) {
+        $processed = $this->process_template($pattern, $entry, $form, false);
         $params = array();
-        
-        // Process the pattern first to replace all merge tags
-        $processed_pattern = $this->process_template($pattern, $entry, $form);
-        
-        // Extract key-value pairs from the pattern
-        $pairs = explode('token', $processed_pattern);
-        
-        foreach ($pairs as $pair) {
-            if (empty($pair)) continue;
-            
-            // Check if this is a token parameter
-            if (strpos($pair, '=') === 0) {
-                $token_parts = explode('=', $pair, 2);
-                if (count($token_parts) === 2) {
-                    $token_number = '';
-                    $token_value = $token_parts[1];
-                    
-                    // Extract token number if it exists
-                    if (preg_match('/^(\d+)(.*)/', $token_parts[0], $matches)) {
-                        $token_number = $matches[1];
-                        // If there's more content after the token number, it belongs to the next parameter
-                        if (!empty($matches[2])) {
-                            // Find where the next parameter starts
-                            $next_param_pos = strpos($token_value, $matches[2]);
-                            if ($next_param_pos !== false) {
-                                $token_value = substr($token_value, 0, $next_param_pos);
-                            }
-                        }
-                    }
-                    
-                    $token_key = 'token' . $token_number;
-                    $params[$token_key] = $token_value;
-                }
-            } else if (strpos($pair, 'template=') !== false) {
-                // Extract template parameter
-                $template_parts = explode('=', $pair, 2);
-                if (count($template_parts) === 2) {
-                    $params['template'] = trim($template_parts[1]);
-                }
-            }
+        // Existing templates are encoded as token=...token2=...template=...
+        // Capture each value up to the next recognized parameter.
+        preg_match_all('/(?:^|(?<=\\s)|(?<=[^a-zA-Z]))(token(?:2|3|10|20)?|template)=(.*?)(?=token(?:2|3|10|20)?=|template=|$)/us', $processed, $matches, PREG_SET_ORDER);
+        foreach ($matches as $match) {
+            $params[$match[1]] = trim($match[2]);
         }
-        
         return $params;
     }
-    
+
     /**
      * Send SMS via Kavenegar Lookup API
      *
@@ -733,6 +709,15 @@ class GFCV_Shortcode {
      * @param array $params The lookup parameters
      * @return array Result with success status and message
      */
+    /** Reuse existing SMS pattern resolution without exposing API keys. */
+    public function build_sms_test_params($pattern, $entry, $form) {
+        return $this->parse_kavenegar_pattern($pattern, $entry, $form);
+    }
+
+    public function send_sms_test_lookup($key, $recipient, $params) {
+        return $this->send_kavenegar_lookup($key, $recipient, $params);
+    }
+
     private function send_kavenegar_lookup($api_key, $receptor, $params) {
         if (empty($api_key) || empty($receptor) || empty($params['template'])) {
             return array(

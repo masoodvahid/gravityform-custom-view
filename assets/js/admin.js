@@ -1,94 +1,67 @@
-/**
- * Admin JavaScript for Gravity Form Custom View
- */
-
-(function($) {
-    'use strict';
-    
-    // Initialize when document is ready
-    $(document).ready(function() {
-        // Initialize CodeMirror for code fields if available
-        if (typeof wp.codeEditor !== 'undefined') {
-            wp.codeEditor.initialize($('#send_to_details'));
-            wp.codeEditor.initialize($('#details_view_html'));
-        }
-        
-        // Update available fields when form changes
-        $('#form_id').on('change', function() {
-            var formId = $(this).val();
-            if (!formId) {
-                $('#field_list').html('<p>Please select a form to view available fields.</p>');
-                return;
-            }
-            
-            // Show loading message
-            $('#field_list').html('<p>Loading fields...</p>');
-            
-            // AJAX call to get form fields
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'gfcv_get_form_fields',
-                    form_id: formId,
-                    nonce: $('#gfcv_nonce').val()
-                },
-                success: function(response) {
-                    if (response.success && response.data.html) {
-                        $('#field_list').html(response.data.html);
-                    } else {
-                        $('#field_list').html('<p>Error loading form fields.</p>');
-                    }
-                },
-                error: function() {
-                    $('#field_list').html('<p>Error loading form fields.</p>');
-                }
-            });
-        });
-        
-        // Add field ID to field_ids input when clicking on a field
-        $(document).on('click', '.field-item', function() {
-            var fieldId = $(this).find('code').text();
-            var currentIds = $('#field_ids').val();
-            
-            // Add the field ID if it's not already in the list
-            if (currentIds) {
-                var idsArray = currentIds.split(',');
-                if ($.inArray(fieldId, idsArray) === -1) {
-                    idsArray.push(fieldId);
-                    $('#field_ids').val(idsArray.join(','));
-                }
-            } else {
-                $('#field_ids').val(fieldId);
-            }
-        });
-    });
-    
-    // Add AJAX handler for getting form fields
-    $(function() {
-        // Add AJAX action for getting form fields
-        if (typeof wp.ajax !== 'undefined') {
-            wp.ajax.add({
-                action: 'gfcv_get_form_fields',
-                data: function(data) {
-                    return {
-                        form_id: data.form_id,
-                        nonce: data.nonce
-                    };
-                },
-                success: function(data) {
-                    return data;
-                },
-                error: function() {
-                    return {
-                        success: false,
-                        data: {
-                            html: '<p>Error loading form fields.</p>'
-                        }
-                    };
-                }
-            });
-        }
-    });
-    
+(function($){
+'use strict';
+$(function(){
+ const $input=$('#field_ids'), $select=$('#gfcv_field_picker'), $list=$('#gfcv_selected_fields');
+ if(!$input.length)return;
+ let names={}, ids=[];
+ function render(){
+   $input.val(ids.join(','));
+   $list.empty();
+   ids.forEach(function(id){
+     const item=$('<span class="gfcv-selected-chip"/>').text((names[id]||'فیلد')+' ('+id+') ');
+     $('<button type="button" class="gfcv-remove-chip" aria-label="حذف فیلد">×</button>').on('click',function(){ids=ids.filter(x=>x!==id);render();}).appendTo(item);
+     $list.append(item);
+   });
+   $select.find('option').each(function(){if(this.value)$(this).prop('disabled',ids.includes(this.value));});
+   $('#field_list .field-item').each(function(){$(this).toggleClass('is-selected',ids.includes(String($(this).data('field-id'))));});
+ }
+ function add(id){id=String(id||'');if(!/^\d+$/.test(id)||ids.includes(id))return;ids.push(id);render();}
+ function readFields(){
+   names={};$select.empty().append($('<option value="">یک فیلد انتخاب کنید...</option>'));
+   $('#field_list .field-item').each(function(){
+     const id=String($(this).data('field-id')),name=$(this).find('span').text();
+     names[id]=name;
+     $select.append($('<option/>').val(id).text(id+' — '+name));
+   });
+   render();
+ }
+ ids=($input.val()||'').split(',').map(v=>v.trim()).filter(v=>/^\d+$/.test(v));
+ readFields();
+ $('#gfcv_add_field').on('click',function(){add($select.val());$select.val('');});
+ $(document).on('click','#field_list .field-item',function(){add($(this).data('field-id'));});
+ $('#form_id').on('change',function(){
+   const formId=$(this).val();ids=[];render();
+   if(!formId){$('#field_list').html('<p>ابتدا فرم را انتخاب کنید.</p>');readFields();return;}
+   $('#field_list').html('<p>در حال بارگذاری فیلدها...</p>');
+   $.post(ajaxurl,{action:'gfcv_get_form_fields',form_id:formId,nonce:$('#gfcv_nonce').val()},function(resp){
+      if(resp&&resp.success){$('#field_list').html(resp.data.html);readFields();}
+      else $('#field_list').text('خطا در دریافت فیلدهای فرم');
+   }).fail(function(){$('#field_list').text('خطا در ارتباط با سرور');});
+ });
+ if(window.wp&&wp.codeEditor){
+   ['#send_to_details','#details_view_html'].forEach(function(sel){if($(sel).length)wp.codeEditor.initialize($(sel));});
+ }
+ const $test=$('#gfcv_test_sms'),$result=$('#gfcv_sms_test_result');
+ $test.on('click',function(){
+   const viewId=$('input[name=view_id]').val(),nonce=window.gfcvAdminData&&gfcvAdminData.smsNonce;
+   if(!nonce){$result.text('کلید امنیتی تست موجود نیست.');return;}
+   $test.prop('disabled',true);$result.text('در حال دریافت پیش‌نمایش...');
+   $.post(ajaxurl,{action:'gfcv_preview_sms',view_id:viewId,nonce:nonce}).done(function(resp){
+     if(!resp.success){$result.text(resp.data&&resp.data.message||'خطا در پیش‌نمایش');return;}
+     const data=resp.data, details=JSON.stringify(data.params,null,2);
+     $result.empty().append($('<p/>').text('رکورد نمونه: '+data.entry_id+' | گیرندگان: '+data.recipients.join('، ')));
+     $result.append($('<pre class="gfcv-sms-preview"/>').text(details));
+     const $send=$('<button type="button" class="button button-primary">تأیید و ارسال پیامک آزمایشی</button>');
+     $result.append($send);
+     $send.on('click',function(){
+       if(!window.confirm('پیامک واقعی به '+data.recipients.length+' شماره ارسال می‌شود و ممکن است هزینه داشته باشد. ادامه می‌دهید؟'))return;
+       $send.prop('disabled',true);$result.append($('<p/>').text('در حال ارسال...'));
+       $.post(ajaxurl,{action:'gfcv_test_sms',view_id:viewId,nonce:nonce,fingerprint:data.fingerprint}).done(function(res){
+         if(!res.success){$result.append($('<p/>').text(res.data&&res.data.message||'ارسال ناموفق'));return;}
+         res.data.results.forEach(function(item){$result.append($('<p/>').text(item.number+' : '+(item.success?'ارسال شد':'ناموفق')+' - '+item.message));});
+       }).fail(function(){$result.append($('<p/>').text('خطای شبکه در زمان ارسال'));});
+     });
+   }).fail(function(){$result.text('خطا در ارتباط با سرور');}).always(function(){$test.prop('disabled',false);});
+ });
+});
 })(jQuery);

@@ -65,7 +65,7 @@ class GFCV_Conditional_Details {
         }
     }
 
-    public static function prepare( $template, $form, $entry ) {
+    public static function prepare( $template, $form, $entry, $respect_conditional_logic = true ) {
         // Legacy templates are unaffected; the feature is opt-in per field.
         if ( false === strpos( $template, 'data-gf-field=' ) ) {
             return $template;
@@ -112,8 +112,8 @@ class GFCV_Conditional_Details {
             }
 
             $field = $fields[ $field_id ];
-            $hidden = (bool) GFFormsModel::is_field_hidden( $form, $field, array(), $entry );
-            if ( $hidden || ! self::entry_has_value( $entry, $field ) ) {
+            $hidden = $respect_conditional_logic && (bool) GFFormsModel::is_field_hidden( $form, $field, array(), $entry );
+            if ( $respect_conditional_logic && ( $hidden || ! self::entry_has_value( $entry, $field ) ) ) {
                 self::remove( $node );
             }
         }
