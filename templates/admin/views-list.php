@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 ?>
-<div class="wrap">
+<div class="wrap gfcv-admin-wrap" dir="rtl">
     <h1 class="wp-heading-inline"><?php _e('Custom Views', 'gravity-form-custom-view'); ?></h1>
     <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view&action=add')); ?>" class="page-title-action"><?php _e('Add New', 'gravity-form-custom-view'); ?></a>
     <hr class="wp-header-end">
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
     </div>
     <?php endif; ?>
     
-    <table class="wp-list-table widefat fixed striped">
+    <table class="wp-list-table widefat fixed striped gfcv-views-table">
         <thead>
             <tr>
                 <th><?php _e('ID', 'gravity-form-custom-view'); ?></th>
