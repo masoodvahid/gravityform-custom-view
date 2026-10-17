@@ -12,6 +12,7 @@
             var entryId = $(this).closest('tr').data('entry-id');
             var viewId = $('.gfcv-container').data('view-id');
             var modal = $('#gfcv-modal-details');
+            modal.removeData('pdf-title');
             
             // Show loading
             modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.loading_text + '</p>');
@@ -30,6 +31,7 @@
                 success: function(response) {
                     if (response.success) {
                         modal.find('.gfcv-modal-body').html(response.data.html);
+                        modal.data('pdf-title', response.data.pdf_title || 'گزارش ثبت‌نام');
                     } else {
                         modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
                     }
@@ -135,6 +137,7 @@
         // HTML uses inline theme colors. No faded native checkbox rendering.
         $(document).on('click', '.gfcv-btn-print', function() {
             var modalContent = $('#gfcv-modal-details .gfcv-modal-body').html();
+            var documentTitle = $('#gfcv-modal-details').data('pdf-title') || 'گزارش ثبت‌نام';
             if (!modalContent) {
                 return;
             }
@@ -164,6 +167,9 @@
                 '</body></html>'
             );
             printWindow.document.close();
+            // Chrome/Edge normally propose the document title as the PDF file name.
+            // No .pdf extension is added here; the browser adds it automatically.
+            printWindow.document.title = documentTitle;
 
             // Legacy templates or cached markup may still contain disabled
             // native form controls. Convert them into ink-safe static symbols
