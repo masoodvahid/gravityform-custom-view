@@ -18,6 +18,9 @@ class GFCV_Admin {
      */
     private static $instance = null;
 
+    /** Hook suffix for the dedicated admin page. */
+    private $page_hook = '';
+
     /**
      * Get an instance of this class.
      */
@@ -52,24 +55,25 @@ class GFCV_Admin {
      * Add admin menu under Gravity Forms
      */
     public function add_admin_menu() {
-        if (class_exists('GFForms')) {
-            // Add submenu page under Gravity Forms
-            add_submenu_page(
-                'gf_edit_forms',
-                __('مدیریت لیست‌های نمایشی', 'gravity-form-custom-view'),
-                __('مدیریت لیست‌های نمایشی', 'gravity-form-custom-view'),
-                'manage_options',
-                'gf_custom_view',
-                array($this, 'display_admin_page')
-            );
-        }
+        // A dedicated top-level screen avoids inheriting Gravity Forms menu
+        // capabilities. Only users with manage_options can see/use this page.
+        // Keep the legacy gf_custom_view slug so saved links still work.
+        $this->page_hook = add_menu_page(
+            __('مدیریت لیست‌های نمایشی', 'gravity-form-custom-view'),
+            __('لیست‌های گرویتی فرم', 'gravity-form-custom-view'),
+            'manage_options',
+            'gf_custom_view',
+            array($this, 'display_admin_page'),
+            'dashicons-forms',
+            58
+        );
     }
 
     /**
      * Enqueue admin scripts and styles
      */
     public function enqueue_admin_scripts($hook) {
-        if ('forms_page_gf_custom_view' !== $hook) {
+        if ('toplevel_page_gf_custom_view' !== $hook && $this->page_hook !== $hook) {
             return;
         }
 
@@ -99,6 +103,9 @@ class GFCV_Admin {
      * Display admin page
      */
     public function display_admin_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('شما اجازه مدیریت این افزونه را ندارید.', 'gravity-form-custom-view'), '', array('response' => 403));
+        }
         // Check if editing or adding a new view
         $view_id = isset($_GET['view_id']) ? absint($_GET['view_id']) : 0;
         $action = isset($_GET['action']) ? sanitize_text_field($_GET['action']) : 'list';
