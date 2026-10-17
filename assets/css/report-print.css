@@ -1,0 +1,89 @@
+/**
+ * Loaded in the dedicated print window only.
+ * Chrome/Edge 131+ support CSS @page margin boxes with page/pages counters.
+ * PDF/Firefox support varies; use Chrome/Edge for numbered archival copies.
+ */
+@page {
+    size: A4;
+    margin: 12mm 13mm 20mm;
+
+    @bottom-center {
+        content: "صفحه " counter(page) " از " counter(pages);
+        color: #000;
+        background: #fff;
+        font-family: Tahoma, Arial, sans-serif;
+        font-weight: 700;
+        font-size: 9pt;
+        border-top: 0.4pt solid #000;
+        padding-top: 2mm;
+    }
+}
+html, body {
+    direction: rtl;
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.gfcv-print-content { width: 100%; max-width: 100%; }
+.gfcv-print-content *,
+.gfcv-print-content *::before,
+.gfcv-print-content *::after {
+    color: #000 !important;
+    background-color: #fff !important;
+    background-image: none !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+.gfcv-print-content .mstid-print-report { width: 100% !important; max-width: none !important; }
+.gfcv-print-content .mstid-report-header { border-top: 4px solid #000 !important; }
+.gfcv-print-content .mstid-section { border: 1px solid #000 !important; border-collapse: separate !important; border-radius: 0 !important; break-inside: auto !important; }
+.gfcv-print-content .mstid-section th { border-right: 4px solid #000 !important; border-bottom: 1px solid #000 !important; }
+.gfcv-print-content .mstid-answer {
+    font-size: 15px !important;
+    padding: 0 10px 7px !important;
+    margin-top: 5px !important;
+    border: 0 !important;
+    border-right: 0 !important;
+    border-radius: 0 !important;
+}
+.gfcv-print-content tr { break-inside: avoid; page-break-inside: avoid; }
+.gfcv-print-content thead { display: table-header-group; }
+.gfcv-print-content img { filter: grayscale(1) contrast(1000%) !important; }
+.gfcv-print-content a { color: #000 !important; text-decoration: underline !important; }
+
+/* Exactly three columns, 90% font, no boxes around individual options. */
+.gfcv-print-content .gfcv-choice-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+    gap: 5px 16px !important;
+    width: 100% !important;
+    font-size: 90% !important;
+    direction: rtl !important;
+}
+.gfcv-print-content .gfcv-choice-list .gfcv-choice {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 2px 0 !important;
+    margin: 0 !important;
+    font-size: 100% !important;
+    line-height: 1.65 !important;
+    break-inside: avoid !important;
+    overflow-wrap: anywhere !important;
+}
+.gfcv-print-content .gfcv-choice-list .gfcv-choice-marker {
+    font-family: Arial, Tahoma, sans-serif !important;
+    font-size: 1em !important;
+    line-height: 1.65 !important;
+    font-weight: 900 !important;
+}
+.gfcv-print-content .gfcv-choice--selected,
+.gfcv-print-content .gfcv-choice--selected .gfcv-choice-label,
+.gfcv-print-content .gfcv-choice-selected-note { font-weight: 800 !important; }

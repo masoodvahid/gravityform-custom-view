@@ -72,6 +72,14 @@ class GFCV_Shortcode {
                 GFCV_PLUGIN_VERSION
             );
             
+            // Reusable details/report layout, independent from stored HTML.
+            wp_enqueue_style(
+                'gfcv-report-styles',
+                GFCV_PLUGIN_URL . 'assets/css/report.css',
+                array('gfcv-frontend-styles'),
+                GFCV_PLUGIN_VERSION
+            );
+
             // Enqueue custom button styles (can be customized by users)
             wp_enqueue_style(
                 'gfcv-custom-button-styles',
@@ -99,7 +107,9 @@ class GFCV_Shortcode {
                     'loading_text' => __('در حال بارگذاری...', 'gravity-form-custom-view'),
                     'error_text' => __('خطا در بارگذاری اطلاعات', 'gravity-form-custom-view'),
                     'frontend_css_url' => GFCV_PLUGIN_URL . 'assets/css/frontend.css',
-                    'custom_buttons_css_url' => GFCV_PLUGIN_URL . 'assets/css/custom-buttons.css'
+                    'custom_buttons_css_url' => GFCV_PLUGIN_URL . 'assets/css/custom-buttons.css',
+                    'report_css_url' => add_query_arg('ver', GFCV_PLUGIN_VERSION, GFCV_PLUGIN_URL . 'assets/css/report.css'),
+                    'report_print_css_url' => add_query_arg('ver', GFCV_PLUGIN_VERSION, GFCV_PLUGIN_URL . 'assets/css/report-print.css')
                 )
             );
         }
