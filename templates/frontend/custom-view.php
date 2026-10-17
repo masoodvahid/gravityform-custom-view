@@ -27,67 +27,105 @@ if ($per_page > 0) {
 $paged_entries = $entries;
 $offset = ($current_page - 1) * $per_page; // Still needed for row numbering
 ?>
-<div class="gfcv-container" data-view-id="<?php echo esc_attr($view->id); ?>">
-    <div class="gfcv-total-entries">
-        <?php printf(__('نمایش %1$s از %2$s مورد', 'gravity-form-custom-view'), count($paged_entries), $total_entries_for_pagination); ?>
+
+<?php
+$visible_field_ids = array_values(array_filter($field_ids, function($field_id) use ($fields) {
+    return isset($fields[$field_id]);
+}));
+$column_count = count($visible_field_ids) + 4;
+?>
+<div class="gfcv-container" data-view-id="<?php echo esc_attr($view->id); ?>" dir="rtl">
+    <div class="gfcv-list-topbar">
+        <div class="gfcv-list-headings">
+            <h3 class="gfcv-list-title">لیست رکوردهای ثبت‌شده</h3>
+            <div class="gfcv-list-subtitle">مشاهده و مدیریت اطلاعات ثبت‌شده در فرم</div>
+        </div>
+        <div class="gfcv-total-entries" role="status">
+            <span class="gfcv-total-number"><?php echo esc_html(number_format_i18n($total_entries_for_pagination)); ?></span>
+            <span>رکورد ثبت‌شده</span>
+        </div>
     </div>
-    <table class="gfcv-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th><?php _e('شناسه', 'gravity-form-custom-view'); ?></th>               
-                <?php foreach ($field_ids as $field_id) : ?>
-                    <?php if (isset($fields[$field_id])) : ?>
-                        <th><?php echo esc_html($fields[$field_id]->label); ?></th>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-                <th><?php _e('تاریخ', 'gravity-form-custom-view'); ?></th>
-                <th><?php _e('عملیات', 'gravity-form-custom-view'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($paged_entries)) : ?>
+    <div class="gfcv-table-scroll" tabindex="0" role="region" aria-label="جدول رکوردها، قابل پیمایش افقی">
+        <table class="gfcv-table">
+            <thead>
                 <tr>
-                    <td colspan="<?php echo count($field_ids) + 3; ?>"><?php _e('هیچ موردی یافت نشد.', 'gravity-form-custom-view'); ?></td>
+                    <th class="gfcv-col-num" scope="col">ردیف</th>
+                    <th class="gfcv-col-id" scope="col">شناسه</th>
+                    <?php foreach ($visible_field_ids as $field_id) : ?>
+                        <th scope="col"><?php echo esc_html($fields[$field_id]->label); ?></th>
+                    <?php endforeach; ?>
+                    <th class="gfcv-col-date" scope="col">تاریخ ثبت</th>
+                    <th class="gfcv-col-actions" scope="col">عملیات</th>
                 </tr>
-            <?php else : ?>
-                <?php $row_number = $offset + 1; // $offset is calculated above ?>
-                <?php foreach ($paged_entries as $entry) : ?>
-                    <tr data-entry-id="<?php echo esc_attr($entry['id']); ?>">
-                        <td><?php echo esc_html($row_number++); ?></td>
-                        <td><?php echo esc_html($entry['id']); ?></td>
-                        
-                        <?php foreach ($field_ids as $field_id) : ?>
-                            <?php if (isset($fields[$field_id])) : ?>
-                                <td><?php echo esc_html(rgar($entry, $field_id)); ?></td>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                        <td><?php echo esc_html(GFCommon::format_date($entry['date_created'], false, 'Y/m/d')); ?></td>
-                        <td class="gfcv-actions">
-                            <button type="button" class="gfcv-btn gfcv-btn-details"><i class="dashicons dashicons-search"></i></button>
-                            <button type="button" class="gfcv-btn"><i class="dashicons dashicons-email"></i></button>
-                            <button type="button" class="gfcv-btn"><i class="dashicons dashicons-admin-users"></i></button>
-                            <?php if ($view->send_to_api) : ?>
-                                <button type="button" class="gfcv-btn"><i class="dashicons dashicons-rest-api"></i></button>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php if (empty($paged_entries)) : ?>
+                    <tr><td class="gfcv-empty-state" colspan="<?php echo esc_attr($column_count); ?>">
+                        <span class="dashicons dashicons-database"></span>
+                        <span>هنوز رکوردی برای نمایش وجود ندارد.</span>
+                    </td></tr>
+                <?php else : ?>
+                    <?php $row_number = $offset + 1; ?>
+                    <?php foreach ($paged_entries as $entry) : ?>
+                        <tr data-entry-id="<?php echo esc_attr($entry['id']); ?>">
+                            <td class="gfcv-col-num"><?php echo esc_html(number_format_i18n($row_number++)); ?></td>
+                            <td class="gfcv-col-id"><span class="gfcv-id-pill"><?php echo esc_html($entry['id']); ?></span></td>
+                            <?php foreach ($visible_field_ids as $field_id) : ?>
+                                <?php
+                                $field = $fields[$field_id];
+                                $value = rgar($entry, (string) $field_id);
+                                if ($field->type === 'checkbox' && !empty($field->inputs)) {
+                                    $selected = array();
+                                    foreach ($field->inputs as $input) {
+                                        $choice_value = rgar($entry, (string) $input['id']);
+                                        if ($choice_value !== null && trim((string) $choice_value) !== '') {
+                                            $selected[] = (string) $choice_value;
+                                        }
+                                    }
+                                    $value = implode('، ', $selected);
+                                } elseif (is_array($value)) {
+                                    $value = implode('، ', array_map('strval', $value));
+                                }
+                                ?>
+                                <td class="gfcv-data-cell"><span><?php echo $value !== null && trim((string)$value) !== '' ? esc_html($value) : '<span class="gfcv-empty-value">—</span>'; ?></span></td>
+                            <?php endforeach; ?>
+                            <td class="gfcv-col-date"><span class="gfcv-date-text"><?php echo esc_html(GFCommon::format_date($entry['date_created'], false, 'Y/m/d')); ?></span></td>
+                            <td class="gfcv-actions">
+                                <div class="gfcv-action-group">
+                                    <button type="button" class="gfcv-btn gfcv-btn-details" title="مشاهده جزئیات" aria-label="مشاهده جزئیات رکورد <?php echo esc_attr($entry['id']); ?>"><span class="dashicons dashicons-visibility" aria-hidden="true"></span></button>
+                                    <?php if (!empty($view->user_sms_pattern)) : ?>
+                                        <button type="button" class="gfcv-btn gfcv-btn-user-sms" title="پیامک کاربر" aria-label="پیامک کاربر برای رکورد <?php echo esc_attr($entry['id']); ?>"><span class="dashicons dashicons-email" aria-hidden="true"></span></button>
+                                    <?php endif; ?>
+                                    <?php if (!empty($view->admin_sms_pattern)) : ?>
+                                        <button type="button" class="gfcv-btn gfcv-btn-admin-sms" title="پیامک مدیر" aria-label="پیامک مدیر برای رکورد <?php echo esc_attr($entry['id']); ?>"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span></button>
+                                    <?php endif; ?>
+                                    <?php if (!empty($view->send_to_api)) : ?>
+                                        <button type="button" class="gfcv-btn gfcv-btn-api" title="جزئیات API" aria-label="نمایش اطلاعات API رکورد <?php echo esc_attr($entry['id']); ?>"><span class="dashicons dashicons-rest-api" aria-hidden="true"></span></button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+    <div class="gfcv-list-bottom">
+        <span>نمایش <?php echo esc_html(number_format_i18n(count($paged_entries))); ?> رکورد در این صفحه</span>
+        <span>برای مشاهده جزئیات، از ستون عملیات استفاده کنید.</span>
+    </div>
 </div>
 
 <!-- Modal Templates -->
 <div class="gfcv-modal" id="gfcv-modal-details" style="display: none;">
     <div class="gfcv-modal-content">
-        <span class="gfcv-modal-close">&times;</span> 
+        <button type="button" class="gfcv-modal-close" aria-label="بستن پنجره">&times;</button> 
         <div class="gfcv-modal-header">
             <button type="button" class="gfcv-btn gfcv-btn-print"><i class="dashicons dashicons-printer"></i></button>
         </div> 
         <div class="gfcv-modal-body"></div>
         <div class="gfcv-modal-footer">
-            <button type="button" class="gfcv-btn gfcv-btn-print"><i class="dashicons dashicons-printer"></i>پبش نمایش چاپ و PDF</button>
+            <button type="button" class="gfcv-btn gfcv-btn-print"><i class="dashicons dashicons-printer"></i>پیش‌نمایش چاپ و PDF</button>
         </div>
     </div>
 </div>
@@ -141,164 +179,3 @@ $offset = ($current_page - 1) * $per_page; // Still needed for row numbering
 </div>
 <?php endif; ?>
 
-<script type="text/javascript">
-// The existing script for modals is fine, no changes needed here.
-jQuery(document).ready(function($) {
-    // Details button click
-    $('.gfcv-btn-details').on('click', function() {
-        var entryId = $(this).closest('tr').data('entry-id');
-        var viewId = $('.gfcv-container').data('view-id');
-        var modal = $('#gfcv-modal-details');
-        
-        // Show loading
-        modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.loading_text + '</p>');
-        modal.show();
-        
-        // Get entry details via AJAX
-        $.ajax({
-            url: gfcv_vars.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'gfcv_get_entry_details',
-                entry_id: entryId,
-                view_id: viewId,
-                nonce: gfcv_vars.nonce
-            },
-            success: function(response) {
-                if (response.success) {
-                    modal.find('.gfcv-modal-body').html(response.data.html);
-                } else {
-                    modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
-                }
-            },
-            error: function() {
-                modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
-            }
-        });
-    });
-    
-    // SMS buttons click (user and admin)
-    $('.gfcv-btn-user-sms, .gfcv-btn-admin-sms').on('click', function() {
-        var entryId = $(this).closest('tr').data('entry-id');
-        var viewId = $('.gfcv-container').data('view-id');
-        var modal = $('#gfcv-modal-sms');
-        var type = $(this).hasClass('gfcv-btn-user-sms') ? 'user' : 'admin';
-        var title = type === 'user' ? '<?php _e("قالب پیامک کاربر", "gravity-form-custom-view"); ?>' : '<?php _e("قالب پیامک مدیر", "gravity-form-custom-view"); ?>';
-        
-        // Set title and show loading
-        modal.find('.gfcv-modal-title').text(title);
-        modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.loading_text + '</p>');
-        modal.show();
-        
-        // Get SMS template via AJAX
-        $.ajax({
-            url: gfcv_vars.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'gfcv_get_sms_template',
-                entry_id: entryId,
-                view_id: viewId,
-                type: type,
-                nonce: gfcv_vars.nonce
-            },
-            success: function(response) {
-                if (response.success) {
-                    modal.find('.gfcv-modal-body').html('<div class="gfcv-sms-template">' + response.data.template + '</div>');
-                } else {
-                    modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
-                }
-            },
-            error: function() {
-                modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
-            }
-        });
-    });
-    
-    // API button click
-    $('.gfcv-btn-api').on('click', function() {
-        var entryId = $(this).closest('tr').data('entry-id');
-        var viewId = $('.gfcv-container').data('view-id');
-        var modal = $('#gfcv-modal-api');
-        
-        // Show loading
-        modal.find('.gfcv-json-data').html(gfcv_vars.loading_text);
-        modal.show();
-        
-        // Get API data via AJAX
-        $.ajax({
-            url: gfcv_vars.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'gfcv_get_api_data',
-                entry_id: entryId,
-                view_id: viewId,
-                nonce: gfcv_vars.nonce
-            },
-            success: function(response) {
-                if (response.success) {
-                    modal.find('.gfcv-json-data').text(response.data.entry_json);
-                } else {
-                    modal.find('.gfcv-json-data').text(gfcv_vars.error_text);
-                }
-            },
-            error: function() {
-                modal.find('.gfcv-json-data').text(gfcv_vars.error_text);
-            }
-        });
-    });
-    
-    // Close modal when clicking the X or outside the modal
-    $('.gfcv-modal-close').on('click', function() {
-        $(this).closest('.gfcv-modal').hide();
-    });
-    
-    $(window).on('click', function(event) {
-        if ($(event.target).hasClass('gfcv-modal')) {
-            $('.gfcv-modal').hide();
-        }
-    });
-    
-    // Send SMS button click
-    $('.gfcv-btn-send-sms').on('click', function() {
-        var modal = $(this).closest('.gfcv-modal');
-        var entryId = modal.data('entry-id');
-        var viewId = $('.gfcv-container').data('view-id');
-        var type = modal.data('sms-type');
-        
-        // Disable button and show loading
-        var $button = $(this);
-        var originalText = $button.html();
-        $button.html('<i class="dashicons dashicons-update-alt gfcv-spin"></i> <?php _e("در حال ارسال...", "gravity-form-custom-view"); ?>');
-        $button.prop('disabled', true);
-        
-        // Send SMS via AJAX
-        $.ajax({
-            url: gfcv_vars.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'gfcv_send_sms',
-                entry_id: entryId,
-                view_id: viewId,
-                type: type,
-                nonce: gfcv_vars.nonce
-            },
-            success: function(response) {
-                if (response.success) {
-                    modal.find('.gfcv-modal-body').append('<div class="gfcv-success-message">' + response.data.message + '</div>');
-                } else {
-                    modal.find('.gfcv-modal-body').append('<div class="gfcv-error-message">' + response.data.message + '</div>');
-                }
-                // Reset button
-                $button.html(originalText);
-                $button.prop('disabled', false);
-            },
-            error: function() {
-                modal.find('.gfcv-modal-body').append('<div class="gfcv-error-message"><?php _e("خطا در ارسال پیامک", "gravity-form-custom-view"); ?></div>');
-                // Reset button
-                $button.html(originalText);
-                $button.prop('disabled', false);
-            }
-        });
-    });
-});
-</script>
