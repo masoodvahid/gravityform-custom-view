@@ -1,0 +1,170 @@
+/**
+ * Gravity Forms Custom View: reusable report layout.
+ *
+ * Templates intentionally contain structure and merge tags only:
+ * mstid-section, mstid-data-row, mstid-bound, mstid-answer, and data-gf-field.
+ * This stylesheet is loaded in the details modal AND in the print window.
+ */
+.mstid-print-report {
+    direction: rtl;
+    text-align: right;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.9;
+    color: #000;
+    background: #fff;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+}
+.mstid-print-report *,
+.mstid-print-report *::before,
+.mstid-print-report *::after { box-sizing: border-box; }
+
+.mstid-print-report table { width: 100%; border-spacing: 0; }
+.mstid-report-header {
+    border: 1px solid #000;
+    border-top: 4px solid #000;
+    margin: 0 0 14px;
+    border-collapse: collapse;
+}
+.mstid-report-header > tbody > tr > td { padding: 16px 18px; border: 0; }
+.mstid-header-inner { border: 0; border-collapse: collapse; }
+.mstid-header-inner td { border: 0; padding: 0; vertical-align: middle; }
+.mstid-header-logo { width: 24%; text-align: right; }
+.mstid-header-logo img {
+    width: 100%;
+    max-width: 135px;
+    height: auto;
+    display: block;
+    filter: grayscale(1) contrast(1000%);
+}
+.mstid-header-title { width: 52%; padding: 0 8px !important; text-align: center; }
+.mstid-report-title { font-size: 17px; font-weight: 800; line-height: 1.5; }
+.mstid-report-subtitle { font-size: 10px; line-height: 1.7; margin-top: 4px; }
+.mstid-header-meta { width: 24%; text-align: left; }
+.mstid-date-label { font-size: 10px; }
+.mstid-date { font-size: 11px; font-weight: 700; }
+
+.mstid-section {
+    width: 100%;
+    border: 1px solid #000;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    margin: 0 0 14px;
+    background: #fff;
+}
+.mstid-section th {
+    background: #fff;
+    color: #000;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.8;
+    padding: 10px 13px;
+    border: 0;
+    border-right: 4px solid #000;
+    border-bottom: 1px solid #000;
+}
+.mstid-section td {
+    border: 0;
+    border-bottom: 1px solid #000;
+    padding: 11px 14px;
+    vertical-align: top;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+.mstid-section tbody:last-child tr:last-child td { border-bottom: 0; }
+.mstid-registration-three-col td { width: 33.333%; padding: 10px; }
+.mstid-field { display: block; min-height: 29px; }
+.mstid-label { font-size: 11.5px; font-weight: 700; line-height: 1.7; }
+.mstid-answer {
+    font-size: 15px;
+    background-color: #fff;
+    color: #000;
+    padding: 0 10px 7px;
+    border: 0;
+    border-radius: 5px;
+    margin-top: 5px;
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+.mstid-note {
+    margin-top: 7px;
+    padding: 7px 10px;
+    border-top: 1px dashed #000;
+    background: #fff;
+    color: #000;
+}
+.mstid-note-label { font-size: 11px; font-weight: 700; }
+.mstid-note-value { font-size: 15px; }
+.mstid-optional-intro {
+    margin: 12px 0 10px;
+    padding: 11px 14px;
+    border: 1px solid #000;
+    border-right: 4px solid #000;
+    background: #fff;
+    font-size: 11px;
+    color: #000;
+}
+.mstid-optional-intro-title { font-weight: 700; }
+.mstid-optional-intro-description,
+.mstid-optional-intro-value { margin-top: 3px; }
+.mstid-footer {
+    text-align: center;
+    font-size: 10px;
+    padding-top: 9px;
+    margin-top: 12px;
+    border-top: 1px solid #000;
+}
+
+/* Multiple-choice answers; maintain three columns and strong black marks. */
+.mstid-print-report .gfcv-choice-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px 16px;
+    width: 100%;
+    direction: rtl;
+    font-size: 90%;
+    line-height: 1.65;
+}
+.mstid-print-report .gfcv-choice-list .gfcv-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+    margin: 0;
+    padding: 2px 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #fff;
+    font-size: 100%;
+    line-height: inherit;
+    overflow-wrap: anywhere;
+    color: #000;
+}
+.mstid-print-report .gfcv-choice-list .gfcv-choice-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.mstid-print-report .gfcv-choice-list .gfcv-choice-marker {
+    font-family: Arial, Tahoma, sans-serif;
+    font-size: 1em;
+    line-height: 1.65;
+    font-weight: 900;
+    color: #000;
+    flex: 0 0 auto;
+}
+.mstid-print-report .gfcv-choice--selected,
+.mstid-print-report .gfcv-choice--selected .gfcv-choice-label,
+.mstid-print-report .gfcv-choice-selected-note { font-weight: 800; }
+.mstid-print-report .gfcv-choice-selected-note { font-size: inherit; }
+
+@media (max-width: 620px) {
+    .mstid-print-report .gfcv-choice-list { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .mstid-print-report .mstid-section td { padding: 8px; }
+}
