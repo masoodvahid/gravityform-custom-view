@@ -3,7 +3,8 @@
  * Plugin Name: نمایش رکوردهای گرویتی فرم با تعیین سطح دسترسی
  * Description: ایجاد لیست قابل مدیریت در گرویتی فرم با توجه به سطح دسترسی کاربران
  * Plugin URI: https://rahkar-digital.ir
- * Version: 1.3
+ * Version: 1.4.0
+ * Update URI: https://github.com/masoodvahid/gravityform-custom-view
  * Author: مسعود وحید
  * Author URI: https://rahkar-digital.ir
  * Text Domain: gravity-form-custom-view
@@ -21,7 +22,7 @@ if (!defined('ABSPATH')) {
 define('GFCV_PLUGIN_FILE', __FILE__);
 define('GFCV_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('GFCV_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('GFCV_PLUGIN_VERSION', '1.3');
+define('GFCV_PLUGIN_VERSION', '1.4.0');
 
 // Check if Gravity Forms is active
 add_action('admin_init', 'gfcv_check_gravity_forms');
@@ -40,6 +41,9 @@ function gfcv_gravity_forms_notice() {
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-db.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-admin.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-shortcode.php';
+require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-conditional-details.php';
+require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-github-updater.php';
+GFCV_GitHub_Updater::init();
 
 // Initialize the plugin
 function gfcv_init() {
