@@ -78,9 +78,10 @@
 .mstid-section tbody:last-child tr:last-child td { border-bottom: 0; }
 .mstid-registration-three-col td { width: 33.333%; padding: 10px; }
 .mstid-field { display: block; min-height: 29px; }
-.mstid-label { font-size: 11.5px; font-weight: 700; line-height: 1.7; }
+.mstid-label { font-size: 11.5px; font-weight: 400; line-height: 1.7; }
 .mstid-answer {
     font-size: 15px;
+    font-weight: 700;
     background-color: #fff;
     color: #000;
     padding: 0 10px 7px;
@@ -98,8 +99,8 @@
     background: #fff;
     color: #000;
 }
-.mstid-note-label { font-size: 11px; font-weight: 700; }
-.mstid-note-value { font-size: 15px; }
+.mstid-note-label { font-size: 11px; font-weight: 400; }
+.mstid-note-value { font-size: 15px; font-weight: 700; }
 .mstid-optional-intro {
     margin: 12px 0 10px;
     padding: 11px 14px;
@@ -128,6 +129,7 @@
     width: 100%;
     direction: rtl;
     font-size: 90%;
+    font-weight: 400;
     line-height: 1.65;
 }
 .mstid-print-report .gfcv-choice-list .gfcv-choice {
@@ -142,6 +144,7 @@
     box-shadow: none;
     background: #fff;
     font-size: 100%;
+    font-weight: 400;
     line-height: inherit;
     overflow-wrap: anywhere;
     color: #000;
@@ -155,7 +158,7 @@
     font-family: Arial, Tahoma, sans-serif;
     font-size: 1em;
     line-height: 1.65;
-    font-weight: 900;
+    font-weight: 400;
     color: #000;
     flex: 0 0 auto;
 }
@@ -163,6 +166,20 @@
 .mstid-print-report .gfcv-choice--selected .gfcv-choice-label,
 .mstid-print-report .gfcv-choice-selected-note { font-weight: 800; }
 .mstid-print-report .gfcv-choice-selected-note { font-size: inherit; }
+.mstid-print-report .gfcv-choice-list .gfcv-choice--unselected,
+.mstid-print-report .gfcv-choice-list .gfcv-choice--unselected .gfcv-choice-label,
+.mstid-print-report .gfcv-choice-list .gfcv-choice--unselected .gfcv-choice-text {
+    font-weight: 400 !important;
+}
+.mstid-print-report .gfcv-choice-list .gfcv-choice--selected,
+.mstid-print-report .gfcv-choice-list .gfcv-choice--selected .gfcv-choice-label,
+.mstid-print-report .gfcv-choice-list .gfcv-choice--selected .gfcv-choice-text,
+.mstid-print-report .gfcv-choice-list .gfcv-choice--selected .gfcv-choice-selected-note {
+    font-weight: 700 !important;
+}
+.mstid-print-report .gfcv-choice-list .gfcv-choice--selected .gfcv-choice-marker {
+    font-weight: 700 !important;
+}
 
 @media (max-width: 620px) {
     .mstid-print-report .gfcv-choice-list { grid-template-columns: repeat(2, minmax(0,1fr)); }

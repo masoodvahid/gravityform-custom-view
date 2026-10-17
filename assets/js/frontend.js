@@ -12,6 +12,7 @@
             var entryId = $(this).closest('tr').data('entry-id');
             var viewId = $('.gfcv-container').data('view-id');
             var modal = $('#gfcv-modal-details');
+            modal.removeData('pdf-title');
             
             // Show loading
             modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.loading_text + '</p>');
@@ -30,6 +31,7 @@
                 success: function(response) {
                     if (response.success) {
                         modal.find('.gfcv-modal-body').html(response.data.html);
+                        modal.data('pdf-title', response.data.pdf_title || 'گزارش ثبت‌نام');
                     } else {
                         modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
                     }
@@ -135,6 +137,7 @@
         // HTML uses inline theme colors. No faded native checkbox rendering.
         $(document).on('click', '.gfcv-btn-print', function() {
             var modalContent = $('#gfcv-modal-details .gfcv-modal-body').html();
+            var documentTitle = $('#gfcv-modal-details').data('pdf-title') || 'گزارش ثبت‌نام';
             if (!modalContent) {
                 return;
             }
@@ -164,6 +167,9 @@
                 '</body></html>'
             );
             printWindow.document.close();
+            // Chrome/Edge normally propose the document title as the PDF file name.
+            // No .pdf extension is added here; the browser adds it automatically.
+            printWindow.document.title = documentTitle;
 
             // Legacy templates or cached markup may still contain disabled
             // native form controls. Convert them into ink-safe static symbols
@@ -171,28 +177,35 @@
             // not modified, and there are no disabled inputs left to fade.
             var printDocument = printWindow.document;
 
-            // FontFace is explicitly registered inside the new print window:
-            // its document does not inherit the website's @font-face rules.
-            // This uses a licensed user-hosted font URL, not a bundled binary.
-            var customPrintFontReady = Promise.resolve();
-            var customPrintFontUrl = gfcv_vars.print_font_url || '';
-            if (customPrintFontUrl && typeof printWindow.FontFace === 'function' && printDocument.fonts) {
-                try {
-                    var iranYekanFace = new printWindow.FontFace(
-                        'GFCV IranYekan',
-                        'url(' + JSON.stringify(customPrintFontUrl) + ')',
-                        { style: 'normal', weight: '100 900' }
-                    );
-                    customPrintFontReady = iranYekanFace.load().then(function(face) {
-                        printDocument.fonts.add(face);
-                    }).catch(function() {
-                        // Keep the print action available with a local fallback.
-                        printWindow.console.warn('GFCV: Unable to load custom IranYekan print font.');
-                    });
-                } catch (fontError) {
-                    printWindow.console.warn('GFCV: Invalid IranYekan font configuration.', fontError);
-                }
+            // The popup is a new document: register two licensed font files
+            // locally, using the same CSS family and distinct 400/700 weights.
+            var fontFiles = [
+                { url: gfcv_vars.print_font_regular_url || '', weight: '400' },
+                { url: gfcv_vars.print_font_bold_url || '', weight: '700' }
+            ];
+            var fontLoadJobs = [];
+            if (typeof printWindow.FontFace === 'function' && printDocument.fonts) {
+                fontFiles.forEach(function(item) {
+                    if (!item.url) {
+                        return;
+                    }
+                    try {
+                        var face = new printWindow.FontFace(
+                            'GFCV Custom Print Font',
+                            'url(' + JSON.stringify(item.url) + ')',
+                            { style: 'normal', weight: item.weight }
+                        );
+                        fontLoadJobs.push(face.load().then(function(loaded) {
+                            printDocument.fonts.add(loaded);
+                        }).catch(function() {
+                            printWindow.console.warn('GFCV: Failed loading custom print font at weight ' + item.weight);
+                        }));
+                    } catch (fontError) {
+                        printWindow.console.warn('GFCV: Invalid custom font URL.', fontError);
+                    }
+                });
             }
+            var customPrintFontsReady = Promise.all(fontLoadJobs);
 
             var legacyChoices = printDocument.querySelectorAll('input[type="checkbox"], input[type="radio"]');
             Array.prototype.forEach.call(legacyChoices, function(input) {
@@ -267,7 +280,7 @@
                 ? printDocument.fonts.ready.catch(function() {})
                 : Promise.resolve();
             var deadline = new Promise(function(resolve) { setTimeout(resolve, 8000); });
-            Promise.race([Promise.all([stylesReady, imagesReady, fontsReady, customPrintFontReady]), deadline]).then(function() {
+            Promise.race([Promise.all([stylesReady, imagesReady, fontsReady, customPrintFontsReady]), deadline]).then(function() {
                 if (!printWindow.closed) {
                     printWindow.focus();
                     printWindow.print();

@@ -22,23 +22,41 @@ if (!defined('ABSPATH')) {
     <?php endif; ?>
     
     <div class="gfcv-admin-form" style="margin:18px 0;padding:18px 22px;max-width:920px">
-        <h2 style="margin:0 0 8px">فونت چاپ گزارش‌ها — IranYekan</h2>
-        <p class="description">برای نمایش دقیق فونت IranYekan روی PDF و برگه چاپی، آدرس مستقیم فایل قانونی فونت خودتان را وارد کنید (ترجیحاً WOFF2 روی همین دامنه). اگر این بخش خالی باشد فقط از فونت IranYekan نصب‌شده روی دستگاه استفاده می‌شود و نمایش آن تضمین نیست.</p>
+        <h2 style="margin:0 0 8px">فونت سفارشی</h2>
+        <p class="description">
+            برای گزارش‌های چاپی و PDF، فایل‌های فونت دلخواه خود را با دو وزن «عادی» و «Bold» معرفی کنید.
+            هر فونت فارسی یا لاتین که مجوز استفاده از آن را دارید قابل استفاده است. فرمت WOFF2 ترجیح دارد.
+            آدرس فایل‌های فونت بهتر است روی همان دامنه وردپرس باشد.
+        </p>
         <?php if (isset($_GET['font_updated'])) : ?>
-            <div class="notice notice-success inline"><p>تنظیم فونت چاپ ذخیره شد.</p></div>
+            <div class="notice notice-success inline"><p>تنظیمات فونت سفارشی ذخیره شد.</p></div>
         <?php endif; ?>
         <?php if (isset($_GET['font_error'])) : ?>
-            <div class="notice notice-error inline"><p>آدرس معتبر HTTPS/HTTP با پسوند WOFF2، WOFF، TTF یا OTF وارد کنید.</p></div>
+            <div class="notice notice-error inline"><p>برای هر فایل فونت، آدرس معتبر HTTP/HTTPS با پسوند WOFF2، WOFF، TTF یا OTF وارد کنید.</p></div>
         <?php endif; ?>
         <form method="post" action="">
             <?php wp_nonce_field('gfcv_save_view', 'gfcv_nonce'); ?>
             <input type="hidden" name="gfcv_action" value="save_print_font">
-            <label for="gfcv_print_font_url" style="display:block;font-weight:700;margin:11px 0 6px">آدرس فایل فونت IranYekan</label>
-            <input type="url" dir="ltr" id="gfcv_print_font_url" name="gfcv_print_font_url"
-                value="<?php echo esc_attr(get_option('gfcv_print_font_url', '')); ?>"
-                placeholder="https://example.com/wp-content/uploads/fonts/IRANYekan.woff2"
+            <label for="gfcv_print_font_regular_url" style="display:block;font-weight:700;margin:12px 0 6px">
+                فایل فونت عادی (Regular / 400)
+            </label>
+            <input type="url" dir="ltr" id="gfcv_print_font_regular_url" name="gfcv_print_font_regular_url"
+                value="<?php echo esc_attr(get_option('gfcv_print_font_regular_url', get_option('gfcv_print_font_url', ''))); ?>"
+                placeholder="https://example.com/wp-content/uploads/fonts/Custom-Regular.woff2"
                 class="large-text" style="max-width:730px;width:100%">
-            <p><button type="submit" class="button button-primary">ذخیره فونت چاپ</button></p>
+            <label for="gfcv_print_font_bold_url" style="display:block;font-weight:700;margin:12px 0 6px">
+                فایل فونت بولد (Bold / 700)
+            </label>
+            <input type="url" dir="ltr" id="gfcv_print_font_bold_url" name="gfcv_print_font_bold_url"
+                value="<?php echo esc_attr(get_option('gfcv_print_font_bold_url', '')); ?>"
+                placeholder="https://example.com/wp-content/uploads/fonts/Custom-Bold.woff2"
+                class="large-text" style="max-width:730px;width:100%">
+            <p class="description" style="margin-top:9px">
+                عنوان فیلدها با وزن عادی و مقادیر با وزن Bold چاپ می‌شوند.
+                در گزینه‌های چندانتخابی، فقط گزینه‌های انتخاب‌شده Bold خواهند بود.
+                اگر فایل Bold وارد نشود، مرورگر ممکن است وزن بولد را به‌صورت مصنوعی تولید کند.
+            </p>
+            <p><button type="submit" class="button button-primary">ذخیره فونت سفارشی</button></p>
         </form>
     </div>
 

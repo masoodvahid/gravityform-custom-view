@@ -110,7 +110,8 @@ class GFCV_Shortcode {
                     'custom_buttons_css_url' => GFCV_PLUGIN_URL . 'assets/css/custom-buttons.css',
                     'report_css_url' => add_query_arg('ver', GFCV_PLUGIN_VERSION, GFCV_PLUGIN_URL . 'assets/css/report.css'),
                     'report_print_css_url' => add_query_arg('ver', GFCV_PLUGIN_VERSION, GFCV_PLUGIN_URL . 'assets/css/report-print.css'),
-                    'print_font_url' => esc_url_raw(get_option('gfcv_print_font_url', ''))
+                    'print_font_regular_url' => esc_url_raw(get_option('gfcv_print_font_regular_url', get_option('gfcv_print_font_url', ''))),
+                    'print_font_bold_url' => esc_url_raw(get_option('gfcv_print_font_bold_url', ''))
                 )
             );
         }
@@ -270,7 +271,12 @@ class GFCV_Shortcode {
         if (!$view) {
             wp_send_json_error(array('message' => __('Custom view not found', 'gravity-form-custom-view')));
         }
-        
+
+        // A public nonce is not an access-control check.
+        if (!empty($view->user_access_ids) && !$this->user_has_access((string) $view->user_access_ids)) {
+            wp_send_json_error(array('message' => __('شما اجازه مشاهده این گزارش را ندارید.', 'gravity-form-custom-view')), 403);
+        }
+
         // Get the entry
         if (!class_exists('GFAPI')) {
             wp_send_json_error(array('message' => __('Gravity Forms API not available', 'gravity-form-custom-view')));
@@ -278,20 +284,82 @@ class GFCV_Shortcode {
         
         $entry = GFAPI::get_entry($entry_id);
         
-        if (is_wp_error($entry)) {
-            wp_send_json_error(array('message' => __('Entry not found', 'gravity-form-custom-view')));
+        if (is_wp_error($entry) || !is_array($entry) || (int) rgar($entry, 'form_id') !== (int) $view->form_id || rgar($entry, 'status') !== 'active') {
+            wp_send_json_error(array('message' => __('Entry not found', 'gravity-form-custom-view')), 404);
         }
-        
+
         // Get the form
         $form = GFAPI::get_form($view->form_id);
         
+        if (!$form || is_wp_error($form)) {
+            wp_send_json_error(array('message' => __('Form not found', 'gravity-form-custom-view')), 404);
+        }
+
         // Process the details view HTML
         $details_template = GFCV_Conditional_Details::prepare($view->details_view_html, $form, $entry, !isset($view->respect_conditional_logic) || (bool)$view->respect_conditional_logic);
         $details_html = $this->process_template($details_template, $entry, $form, !isset($view->show_all_options) || (bool)$view->show_all_options);
         
         wp_send_json_success(array(
-            'html' => $details_html
+            'html' => $details_html,
+            'pdf_title' => $this->pdf_document_title($view, $form, $entry)
         ));
+    }
+
+    /**
+     * Build a safe and useful title for browser Print > Save as PDF.
+     * Browsers usually derive the suggested filename from document.title.
+     */
+    private function pdf_document_title($view, $form, $entry) {
+        $first = $this->pdf_entry_text($entry, $form, $view->pdf_first_name_field_id ?? '');
+        $last = $this->pdf_entry_text($entry, $form, $view->pdf_last_name_field_id ?? '');
+        $full_name = trim($first . ' ' . $last);
+        if ('' === $full_name) {
+            $full_name = 'رکورد ' . absint(rgar($entry, 'id'));
+        }
+        $form_title = !empty($form['title']) ? $form['title'] : 'فرم';
+        $title = absint($view->form_id) . ' - ' . $full_name . ' - ' . $form_title;
+
+        // Keep filenames compatible with Windows, macOS and common PDF tools.
+        $title = wp_strip_all_tags($title, true);
+        $title = str_replace(array('/', chr(92), ':', '*', '?', '"', '<', '>', '|'), ' ', $title);
+        $title = preg_replace('/[\\x00-\\x1F\\x7F]+/u', ' ', $title);
+        $title = preg_replace('/\\s+/u', ' ', $title);
+        $title = trim($title, " .-\\t\\n\\r\\0\\x0B");
+        return function_exists('mb_substr') ? mb_substr($title, 0, 180) : substr($title, 0, 180);
+    }
+
+    /**
+     * Get a textual value from a normal field or a Gravity Forms compound
+     * field such as Name (its saved sub-input IDs are 1.3, 1.6, etc.).
+     */
+    private function pdf_entry_text($entry, $form, $field_id) {
+        $field_id = (string) $field_id;
+        if (!preg_match('/^[0-9]+(?:\\.[0-9]+)?$/', $field_id)) {
+            return '';
+        }
+        $value = rgar($entry, $field_id);
+        if (!is_array($value) && !is_object($value) && (null === $value || '' === trim((string) $value)) && false === strpos($field_id, '.')) {
+            foreach ((array) ($form['fields'] ?? array()) as $field) {
+                if ((string) $field->id !== $field_id || empty($field->inputs)) {
+                    continue;
+                }
+                $pieces = array();
+                foreach ($field->inputs as $input) {
+                    if (isset($input['id'])) {
+                        $part = trim((string) rgar($entry, (string) $input['id']));
+                        if ('' !== $part) {
+                            $pieces[] = $part;
+                        }
+                    }
+                }
+                $value = implode(' ', $pieces);
+                break;
+            }
+        }
+        if (is_array($value) || is_object($value)) {
+            return '';
+        }
+        return sanitize_text_field((string) $value);
     }
 
     /**

@@ -16,6 +16,18 @@ $(function(){
    $('#field_list .field-item').each(function(){$(this).toggleClass('is-selected',ids.includes(String($(this).data('field-id'))));});
  }
  function add(id){id=String(id||'');if(!/^\d+$/.test(id)||ids.includes(id))return;ids.push(id);render();}
+ function fillPdfNameFields(options){
+   ['#pdf_first_name_field_id','#pdf_last_name_field_id'].forEach(function(selector){
+     const $field=$(selector);
+     if(!$field.length)return;
+     const placeholder=selector.indexOf('first')!==-1?'انتخاب فیلد نام':'انتخاب فیلد نام خانوادگی';
+     $field.empty().append($('<option/>').val('').text(placeholder));
+     (options||[]).forEach(function(option){
+       $field.append($('<option/>').val(String(option.id)).text(option.id+' — '+option.label));
+     });
+     $field.val('');
+   });
+ }
  function readFields(){
    names={};$select.empty().append($('<option value="">یک فیلد انتخاب کنید...</option>'));
    $('#field_list .field-item').each(function(){
@@ -30,11 +42,11 @@ $(function(){
  $('#gfcv_add_field').on('click',function(){add($select.val());$select.val('');});
  $(document).on('click','#field_list .field-item',function(){add($(this).data('field-id'));});
  $('#form_id').on('change',function(){
-   const formId=$(this).val();ids=[];render();
+   const formId=$(this).val();ids=[];render();fillPdfNameFields([]);
    if(!formId){$('#field_list').html('<p>ابتدا فرم را انتخاب کنید.</p>');readFields();return;}
    $('#field_list').html('<p>در حال بارگذاری فیلدها...</p>');
    $.post(ajaxurl,{action:'gfcv_get_form_fields',form_id:formId,nonce:$('#gfcv_nonce').val()},function(resp){
-      if(resp&&resp.success){$('#field_list').html(resp.data.html);readFields();}
+      if(resp&&resp.success){$('#field_list').html(resp.data.html);readFields();fillPdfNameFields(resp.data.pdf_fields||resp.data.fields||[]);}
       else $('#field_list').text('خطا در دریافت فیلدهای فرم');
    }).fail(function(){$('#field_list').text('خطا در ارتباط با سرور');});
  });

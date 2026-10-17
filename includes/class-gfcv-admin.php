@@ -166,27 +166,45 @@ class GFCV_Admin {
         
         $action = sanitize_text_field(wp_unslash($_POST['gfcv_action']));
 
-        // Global print-font source, independently managed by the site admin.
-        // We store a URL only: font binaries and their licenses stay on the
-        // owner's server and never become part of the public plugin.
+        // Store regular and bold font sources separately. Use a neutral
+        // internal family alias so this setting works with any licensed font.
+        // Retain the old single IranYekan URL as a one-time regular fallback.
         if ('save_print_font' === $action) {
-            $input = isset($_POST['gfcv_print_font_url'])
-                ? trim(sanitize_text_field(wp_unslash($_POST['gfcv_print_font_url'])))
+            $regular_input = isset($_POST['gfcv_print_font_regular_url'])
+                ? trim(sanitize_text_field(wp_unslash($_POST['gfcv_print_font_regular_url'])))
                 : '';
-            $url = esc_url_raw($input);
-            $path = (string) wp_parse_url($url, PHP_URL_PATH);
-            $scheme = (string) wp_parse_url($url, PHP_URL_SCHEME);
-            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-            $valid = $input === '' || (
-                in_array($scheme, array('https', 'http'), true)
-                && in_array($ext, array('woff2', 'woff', 'ttf', 'otf'), true)
-                && (bool) wp_parse_url($url, PHP_URL_HOST)
+            $bold_input = isset($_POST['gfcv_print_font_bold_url'])
+                ? trim(sanitize_text_field(wp_unslash($_POST['gfcv_print_font_bold_url'])))
+                : '';
+
+            $urls = array(
+                'regular' => esc_url_raw($regular_input),
+                'bold'    => esc_url_raw($bold_input),
             );
-            if (!$valid) {
-                wp_safe_redirect(admin_url('admin.php?page=gf_custom_view&font_error=1'));
-                exit;
+            foreach (array('regular' => $regular_input, 'bold' => $bold_input) as $weight => $input) {
+                if ('' === $input) {
+                    continue; // Allow clearing either weight.
+                }
+                $url = $urls[$weight];
+                $scheme = strtolower((string) wp_parse_url($url, PHP_URL_SCHEME));
+                $host = (string) wp_parse_url($url, PHP_URL_HOST);
+                $path = (string) wp_parse_url($url, PHP_URL_PATH);
+                $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+                if (
+                    !in_array($scheme, array('https', 'http'), true)
+                    || '' === $host
+                    || !in_array($ext, array('woff2', 'woff', 'ttf', 'otf'), true)
+                ) {
+                    wp_safe_redirect(admin_url('admin.php?page=gf_custom_view&font_error=1'));
+                    exit;
+                }
             }
-            update_option('gfcv_print_font_url', $url, false);
+
+            update_option('gfcv_print_font_regular_url', $urls['regular'], false);
+            update_option('gfcv_print_font_bold_url', $urls['bold'], false);
+            // The old option is kept for compatibility with any older copy
+            // of the plugin but is no longer used once the new options exist.
             wp_safe_redirect(admin_url('admin.php?page=gf_custom_view&font_updated=1'));
             exit;
         }
@@ -199,6 +217,8 @@ class GFCV_Admin {
             $data = array(
                 'view_title' => sanitize_text_field($_POST['view_title']),
                 'form_id' => absint($_POST['form_id']),
+                'pdf_first_name_field_id' => $this->sanitize_pdf_field_id($_POST['pdf_first_name_field_id'] ?? ''),
+                'pdf_last_name_field_id' => $this->sanitize_pdf_field_id($_POST['pdf_last_name_field_id'] ?? ''),
                 'field_ids' => implode(',', array_map('absint', array_filter(explode(',', sanitize_text_field(wp_unslash($_POST['field_ids'] ?? '')))))),
                 'show_all_options' => isset($_POST['show_all_options']) ? 1 : 0,
                 'respect_conditional_logic' => isset($_POST['respect_conditional_logic']) ? 1 : 0,
@@ -239,6 +259,15 @@ class GFCV_Admin {
     }
     
     /**
+     * Accept a Gravity Forms field ID or compound input ID (e.g. 1.3).
+     * These IDs are configuration, not arbitrary merge-tag expressions.
+     */
+    private function sanitize_pdf_field_id($value) {
+        $value = sanitize_text_field(wp_unslash((string) $value));
+        return preg_match('/^[0-9]+(?:\\.[0-9]+)?$/', $value) ? $value : '';
+    }
+
+    /**
      * AJAX handler for getting form fields
      */
     public function ajax_get_form_fields() {
@@ -278,7 +307,26 @@ class GFCV_Admin {
             $html = '<p>' . __('No fields found in this form.', 'gravity-form-custom-view') . '</p>';
         }
         
-        wp_send_json_success(array('html' => $html, 'fields' => array_values(array_map(function($field) {return array('id' => (string)$field->id, 'label' => $field->label);}, array_filter($form['fields'], function($field) {return !$field->displayOnly;})))));
+        // PDF filename selectors support both ordinary fields and Name sub-inputs.
+        $pdf_fields = array();
+        foreach ($form['fields'] as $field) {
+            if (!empty($field->displayOnly)) {
+                continue;
+            }
+            $pdf_fields[] = array('id' => (string) $field->id, 'label' => (string) $field->label);
+            if (!empty($field->inputs) && is_array($field->inputs)) {
+                foreach ($field->inputs as $input) {
+                    if (isset($input['id'])) {
+                        $pdf_fields[] = array(
+                            'id' => (string) $input['id'],
+                            'label' => (string) $field->label . ' — ' . (string) ($input['label'] ?? $input['id']),
+                        );
+                    }
+                }
+            }
+        }
+
+        wp_send_json_success(array('pdf_fields' => $pdf_fields, 'html' => $html, 'fields' => array_values(array_map(function($field) {return array('id' => (string)$field->id, 'label' => $field->label);}, array_filter($form['fields'], function($field) {return !$field->displayOnly;})))));
     }
     /** Only admins can preview/send a test using persisted credentials. */
     private function sms_test_context() {

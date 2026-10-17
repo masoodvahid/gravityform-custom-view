@@ -29,7 +29,9 @@ $view_data = array(
     'user_mobile_field_id' => '5',
     'admin_mobile_numbers' => '',
     'show_all_options' => 1,
-    'respect_conditional_logic' => 1
+    'respect_conditional_logic' => 1,
+    'pdf_first_name_field_id' => '',
+    'pdf_last_name_field_id' => ''
 );
 
 // If editing, populate with existing data
@@ -88,6 +90,67 @@ if ($is_edit) {
                 </td>
             </tr>
             
+            <tr>
+                <th scope="row">نام فایل PDF</th>
+                <td>
+                    <p class="description">
+                        الگوی عنوان هنگام «Save as PDF»:
+                        <code>شناسه فرم - نام و نام خانوادگی ثبت‌کننده - عنوان فرم</code>.
+                        فیلدهای نام و نام خانوادگی را از فرم انتخاب کنید.
+                        می‌توانید از زیرفیلدهای فرم‌های «نام» نیز استفاده کنید.
+                    </p>
+                    <?php
+                    $pdf_form = $view_data['form_id'] && class_exists('GFAPI')
+                        ? GFAPI::get_form(absint($view_data['form_id']))
+                        : false;
+                    $pdf_fields = array();
+                    if ($pdf_form && !empty($pdf_form['fields'])) {
+                        foreach ($pdf_form['fields'] as $pdf_field) {
+                            if (!empty($pdf_field->displayOnly)) {
+                                continue;
+                            }
+                            $pdf_fields[] = array('id' => (string) $pdf_field->id, 'label' => (string) $pdf_field->label);
+                            if (!empty($pdf_field->inputs) && is_array($pdf_field->inputs)) {
+                                foreach ($pdf_field->inputs as $pdf_input) {
+                                    if (isset($pdf_input['id'])) {
+                                        $pdf_fields[] = array(
+                                            'id' => (string) $pdf_input['id'],
+                                            'label' => (string) $pdf_field->label . ' — ' . (string) ($pdf_input['label'] ?? $pdf_input['id']),
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ?>
+                    <div class="gfcv-picker-row" style="margin:12px 0 8px">
+                        <div>
+                            <label for="pdf_first_name_field_id" style="display:block;margin-bottom:5px">فیلد نام</label>
+                            <select name="pdf_first_name_field_id" id="pdf_first_name_field_id">
+                                <option value="">انتخاب فیلد نام</option>
+                                <?php foreach ($pdf_fields as $pdf_field_option) : ?>
+                                <option value="<?php echo esc_attr($pdf_field_option['id']); ?>" <?php selected((string)$view_data['pdf_first_name_field_id'], $pdf_field_option['id']); ?>>
+                                    <?php echo esc_html($pdf_field_option['id'] . ' — ' . $pdf_field_option['label']); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="pdf_last_name_field_id" style="display:block;margin-bottom:5px">فیلد نام خانوادگی</label>
+                            <select name="pdf_last_name_field_id" id="pdf_last_name_field_id">
+                                <option value="">انتخاب فیلد نام خانوادگی</option>
+                                <?php foreach ($pdf_fields as $pdf_field_option) : ?>
+                                <option value="<?php echo esc_attr($pdf_field_option['id']); ?>" <?php selected((string)$view_data['pdf_last_name_field_id'], $pdf_field_option['id']); ?>>
+                                    <?php echo esc_html($pdf_field_option['id'] . ' — ' . $pdf_field_option['label']); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="description">اگر یک فیلد «نام و نام خانوادگی» داری، فقط فیلد نام را انتخاب کن؛ فیلد دوم اختیاری است.</p>
+                </td>
+            </tr>
+
             <tr>
                 <th scope="row">
                     <label for="field_ids"><?php _e('Field IDs to Display', 'gravity-form-custom-view'); ?></label>
