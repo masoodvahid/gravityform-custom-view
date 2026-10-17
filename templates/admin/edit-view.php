@@ -27,7 +27,9 @@ $view_data = array(
     'details_view_html' => '',
     'user_access_ids' => '',
     'user_mobile_field_id' => '5',
-    'admin_mobile_numbers' => ''
+    'admin_mobile_numbers' => '',
+    'show_all_options' => 1,
+    'respect_conditional_logic' => 1
 );
 
 // If editing, populate with existing data
@@ -39,7 +41,7 @@ if ($is_edit) {
     }
 }
 ?>
-<div class="wrap">
+<div class="wrap gfcv-admin-wrap" dir="rtl">
     <h1><?php echo esc_html($title); ?></h1>
     
     <?php if (isset($_GET['updated'])) : ?>
@@ -54,7 +56,7 @@ if ($is_edit) {
     </div>
     <?php endif; ?>
     
-    <form method="post" action="">
+    <form method="post" action="" class="gfcv-admin-form">
         <?php wp_nonce_field('gfcv_save_view', 'gfcv_nonce'); ?>
         <input type="hidden" name="gfcv_action" value="save_view">
         <input type="hidden" name="view_id" value="<?php echo esc_attr($view_data['id']); ?>">
@@ -91,41 +93,42 @@ if ($is_edit) {
                     <label for="field_ids"><?php _e('Field IDs to Display', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="field_ids" name="field_ids" value="<?php echo esc_attr($view_data['field_ids']); ?>" class="regular-text" required>
-                    <p class="description"><?php _e('Enter comma-separated field IDs to display in the table (e.g., 1,3,5).', 'gravity-form-custom-view'); ?></p>
-                    <div id="available_fields" style="margin-top: 10px;">
-                        <p><strong><?php _e('Available Fields:', 'gravity-form-custom-view'); ?></strong></p>
-                        <div id="field_list">
-                            <?php if ($view_data['form_id'] && !empty($forms)) : ?>
-                                <?php 
-                                $selected_form = null;
-                                foreach ($forms as $form) {
-                                    if ($form['id'] == $view_data['form_id']) {
-                                        $selected_form = $form;
-                                        break;
-                                    }
-                                }
-                                
-                                if ($selected_form && !empty($selected_form['fields'])) :
-                                    foreach ($selected_form['fields'] as $field) :
-                                        if (!$field->displayOnly) :
-                                ?>
-                                    <div class="field-item">
-                                        <code><?php echo esc_html($field->id); ?></code>: <?php echo esc_html($field->label); ?>
-                                    </div>
-                                <?php 
-                                        endif;
-                                    endforeach;
-                                endif;
-                                ?>
-                            <?php else : ?>
-                                <p><?php _e('Please select a form to view available fields.', 'gravity-form-custom-view'); ?></p>
+                    <input type="hidden" id="field_ids" name="field_ids" value="<?php echo esc_attr($view_data['field_ids']); ?>">
+                    <div class="gfcv-selector">
+                        <label for="gfcv_field_picker">انتخاب فیلد برای جدول</label>
+                        <div class="gfcv-picker-row">
+                            <select id="gfcv_field_picker"><option value="">یک فیلد انتخاب کنید...</option></select>
+                            <button type="button" class="button button-secondary" id="gfcv_add_field">افزودن به جدول</button>
+                        </div>
+                        <div id="gfcv_selected_fields" class="gfcv-selected-fields"></div>
+                    </div>
+                    <div id="available_fields" class="gfcv-field-browser">
+                        <strong>شناسه فیلدهای فرم</strong>
+                        <p class="description">برای افزودن سریع، روی هر فیلد کلیک کنید.</p>
+                        <div id="field_list" class="gfcv-field-grid">
+                            <?php
+                            $selected_form = $view_data['form_id'] ? GFAPI::get_form($view_data['form_id']) : null;
+                            if ($selected_form && !empty($selected_form['fields'])) :
+                                foreach ($selected_form['fields'] as $field) :
+                                    if (!$field->displayOnly) :
+                            ?>
+                            <button type="button" class="field-item" data-field-id="<?php echo esc_attr($field->id); ?>">
+                                <code><?php echo esc_html($field->id); ?></code><span><?php echo esc_html($field->label); ?></span>
+                            </button>
+                            <?php endif; endforeach; else: ?>
+                                <p>برای مشاهده فیلدها ابتدا فرم را انتخاب کنید.</p>
                             <?php endif; ?>
                         </div>
                     </div>
                 </td>
             </tr>
             
+            <tr><th scope="row">تنظیمات نمایش پاسخ‌ها</th><td>
+                <label class="gfcv-setting"><input type="checkbox" name="show_all_options" value="1" <?php checked($view_data['show_all_options'], 1); ?>> نمایش تمام گزینه‌های سؤالات چندگزینه‌ای</label>
+                <p class="description">وقتی غیرفعال باشد، فقط پاسخ‌های انتخاب‌شده در نمایش جزئیات می‌آیند.</p>
+                <label class="gfcv-setting"><input type="checkbox" name="respect_conditional_logic" value="1" <?php checked($view_data['respect_conditional_logic'], 1); ?>> نمایش فیلدهای شرطی فقط در صورت برقراری شرط</label>
+                <p class="description">این گزینه برای قالب‌های جزئیات دارای data-gf-field کار می‌کند.</p>
+            </td></tr>
             <tr>
                 <th scope="row">
                     <label for="admin_sms_pattern"><?php _e('Admin SMS Pattern', 'gravity-form-custom-view'); ?></label>
@@ -215,6 +218,13 @@ if ($is_edit) {
                     <p class="description"><?php _e('Enter comma-separated admin mobile numbers to receive SMS notifications.', 'gravity-form-custom-view'); ?></p>
                 </td>
             </tr>
+            <?php if ($is_edit) : ?>
+            <tr><th scope="row">تست سامانه پیامک</th><td>
+                <button type="button" class="button button-secondary" id="gfcv_test_sms">پیش‌نمایش و تست پیامک مدیر</button>
+                <p class="description">از آخرین رکورد فرم برای ساخت پیامک استفاده می‌شود؛ ارسال فقط پس از تأیید به شماره‌های ذخیره‌شده مدیران انجام خواهد شد.</p>
+                <div id="gfcv_sms_test_result" aria-live="polite"></div>
+            </td></tr>
+            <?php endif; ?>
         </table>
         
         <?php if ($is_edit) : ?>
@@ -230,42 +240,3 @@ if ($is_edit) {
     </form>
 </div>
 
-<script type="text/javascript">
-jQuery(document).ready(function($) {
-    // Initialize CodeMirror for code fields
-    if (typeof wp.codeEditor !== 'undefined') {
-        wp.codeEditor.initialize($('#send_to_details'));
-        wp.codeEditor.initialize($('#details_view_html'));
-    }
-    
-    // Update available fields when form changes
-    $('#form_id').on('change', function() {
-        var formId = $(this).val();
-        if (!formId) {
-            $('#field_list').html('<p><?php _e('Please select a form to view available fields.', 'gravity-form-custom-view'); ?></p>');
-            return;
-        }
-        
-        // AJAX call to get form fields
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'gfcv_get_form_fields',
-                form_id: formId,
-                nonce: '<?php echo wp_create_nonce('gfcv_get_form_fields'); ?>'
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#field_list').html(response.data.html);
-                } else {
-                    $('#field_list').html('<p><?php _e('Error loading form fields.', 'gravity-form-custom-view'); ?></p>');
-                }
-            },
-            error: function() {
-                $('#field_list').html('<p><?php _e('Error loading form fields.', 'gravity-form-custom-view'); ?></p>');
-            }
-        });
-    });
-});
-</script>
