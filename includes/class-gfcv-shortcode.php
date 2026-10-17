@@ -416,7 +416,7 @@ class GFCV_Shortcode {
 
         return '<span class="gfcv-choice' . $selected_class . '" data-choice-type="' . esc_attr($type) . '">'
             . '<span class="gfcv-choice-marker" aria-hidden="true">' . $mark . '</span> '
-            . $label_html . $selected_note . '</span>';
+            . '<span class="gfcv-choice-text">' . $label_html . $selected_note . '</span></span>';
     }
 
     private function process_template($template, $entry, $form, $show_all_options = true) {
