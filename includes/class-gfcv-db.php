@@ -68,6 +68,8 @@ class GFCV_DB {
             admin_mobile_numbers text,
             show_all_options tinyint(1) NOT NULL DEFAULT 1,
             respect_conditional_logic tinyint(1) NOT NULL DEFAULT 1,
+            pdf_first_name_field_id varchar(20) NOT NULL DEFAULT '',
+            pdf_last_name_field_id varchar(20) NOT NULL DEFAULT '',
             date_created datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id)
         ) $charset_collate;";
@@ -81,9 +83,9 @@ class GFCV_DB {
      * This is intentionally versioned separately from the plugin's display version.
      */
     public static function maybe_upgrade() {
-        if (get_option('gfcv_db_version') !== '1.5.0') {
+        if (get_option('gfcv_db_version') !== '1.5.8') {
             self::create_tables();
-            update_option('gfcv_db_version', '1.5.0');
+            update_option('gfcv_db_version', '1.5.8');
         }
     }
 
