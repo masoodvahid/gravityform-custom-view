@@ -237,7 +237,7 @@ class GFCV_Admin {
         if (!empty($form['fields'])) {
             foreach ($form['fields'] as $field) {
                 if (!$field->displayOnly) {
-                    $html .= '<div class="field-item" data-field-id="' . esc_attr($field->id) . '"><code>' . esc_html($field->id) . '</code><span>' . esc_html($field->label) . '</span></div>';
+                    $html .= '<button type="button" class="field-item" data-field-id="' . esc_attr($field->id) . '"><code>' . esc_html($field->id) . '</code><span>' . esc_html($field->label) . '</span></button>';
                 }
             }
         } else {
