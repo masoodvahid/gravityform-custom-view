@@ -141,12 +141,36 @@ class GFCV_Conditional_Details {
                 }
             }
 
-            $remaining = $xpath->query( './td', $row );
-            if ( 1 === $remaining->length ) {
-                $cell = $remaining->item( 0 );
-                $cell->setAttribute( 'colspan', '2' );
-                $style = preg_replace( '/width\\s*:\\s*50%\\s*;?/i', '', $cell->getAttribute( 'style' ) );
-                $cell->setAttribute( 'style', $style . ';width:100%;' );
+            // The template can declare either two or three columns. Fill the
+            // complete row width after hidden conditional fields are pruned.
+            $table = $row->parentNode;
+            while ( $table && 'table' !== $table->nodeName ) {
+                $table = $table->parentNode;
+            }
+            $columns = ( $table && $table->hasAttribute( 'data-mstid-columns' ) )
+                ? max( 1, min( 6, absint( $table->getAttribute( 'data-mstid-columns' ) ) ) )
+                : 2;
+            $remaining = iterator_to_array( $xpath->query( './td', $row ) );
+            $count = count( $remaining );
+            if ( $count > 0 ) {
+                $span_sum = 0;
+                foreach ( $remaining as $cell ) {
+                    $span_sum += max( 1, (int) $cell->getAttribute( 'colspan' ) );
+                }
+                if ( $span_sum < $columns ) {
+                    $last = $remaining[ $count - 1 ];
+                    $last_span = max( 1, (int) $last->getAttribute( 'colspan' ) );
+                    $last->setAttribute( 'colspan', (string) ( $last_span + $columns - $span_sum ) );
+                }
+                if ( 1 === $count ) {
+                    $cell = $remaining[0];
+                    $cell->setAttribute( 'colspan', (string) $columns );
+                    // Drop a legacy fixed 50%/33.333% cell width.
+                    $style = preg_replace( '/width\\s*:\\s*(?:50|33(?:\\.333)?)%\\s*;?/i', '', $cell->getAttribute( 'style' ) );
+                    if ( $style !== $cell->getAttribute( 'style' ) ) {
+                        $cell->setAttribute( 'style', $style );
+                    }
+                }
             }
         }
 
