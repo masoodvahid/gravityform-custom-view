@@ -275,7 +275,8 @@ class GFCV_Shortcode {
         $form = GFAPI::get_form($view->form_id);
         
         // Process the details view HTML
-        $details_html = $this->process_template($view->details_view_html, $entry, $form);
+        $details_template = GFCV_Conditional_Details::prepare($view->details_view_html, $form, $entry);
+        $details_html = $this->process_template($details_template, $entry, $form);
         
         wp_send_json_success(array(
             'html' => $details_html
@@ -532,29 +533,28 @@ class GFCV_Shortcode {
                         $field_value = '';
                     }
                 }
-                // Handle Checkbox fields
-               elseif ($field->type === 'checkbox') {
-					$output = '<div class="gfcv-checkbox-field">';
-					if (!empty($field->choices) && is_array($field->choices)) {
-						foreach ($field->choices as $index => $choice) {
-							$input_id = $field->id . '.' . ($index + 1);
-							$value = rgar($entry, $input_id);
+                // Render selected checkbox values only, and allow truly blank values
+                // to stay empty so conditional print rows can be removed.
+                elseif ($field->type === 'checkbox') {
+                    $selected = array();
+                    if (!empty($field->inputs) && is_array($field->inputs)) {
+                        foreach ($field->inputs as $input) {
+                            $value = rgar($entry, (string) $input['id']);
+                            if ($value !== null && trim((string) $value) !== '') {
+                                $selected[] = esc_html($value);
+                            }
+                        }
+                    } elseif (!empty($field->choices)) {
+                        foreach ($field->choices as $index => $choice) {
+                            $value = rgar($entry, $field->id . '.' . ($index + 1));
+                            if ($value !== null && trim((string) $value) !== '') {
+                                $selected[] = esc_html($value);
+                            }
+                        }
+                    }
+                    $field_value = implode('، ', $selected);
+                }
 
-							$is_checked = (!empty($value) && ($value === $choice['value'] || $value === $choice['text']));
-							$checked_attr = $is_checked ? 'checked' : '';
-
-							$output .= '<label style="display:inline-block; margin: 5px;">';
-							$output .= '<input type="checkbox" onclick="return false;" ' . $checked_attr . '> ';
-							$output .= esc_html($choice['text']);
-							$output .= '</label>';
-						}
-					}
-					$output .= '</div>';
-					$field_value = $output;
-				}
-					
-
-				
                 // Handle Select fields
                 elseif ($field->type === 'select') {
                     error_log('GFCV Debug: Select Field ID: ' . $field_id);
