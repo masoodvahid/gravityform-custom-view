@@ -568,7 +568,7 @@ class GFCV_Shortcode {
                             }
                         }
                     }
-                    $field_value = implode(' ', $items);
+                    $field_value = $items ? '<div class="gfcv-choice-list" data-choice-layout="three-columns">' . implode('', $items) . '</div>' : '';
                 }
                 elseif ($field->type === 'radio') {
                     if (!empty($field->choices)) {
@@ -581,7 +581,7 @@ class GFCV_Shortcode {
                                 $items[] = $this->format_print_choice($choice['text'], $checked, 'radio');
                             }
                         }
-                        $field_value = implode(' ', $items);
+                        $field_value = $items ? '<div class="gfcv-choice-list" data-choice-layout="three-columns">' . implode('', $items) . '</div>' : '';
                     } else {
                         $field_value = esc_html((string) $field_value);
                     }
