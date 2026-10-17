@@ -319,9 +319,10 @@ class GFCV_Shortcode {
         $form_title = !empty($form['title']) ? $form['title'] : 'فرم';
         $title = absint($view->form_id) . ' - ' . $full_name . ' - ' . $form_title;
 
-        // Keep the title valid as a file name across Windows/macOS.
+        // Keep filenames compatible with Windows, macOS and common PDF tools.
         $title = wp_strip_all_tags($title, true);
-        $title = preg_replace('/[\\x00-\\x1F\\x7F\\/\\\\:*?"<>|]+/u', ' ', $title);
+        $title = str_replace(array('/', chr(92), ':', '*', '?', '"', '<', '>', '|'), ' ', $title);
+        $title = preg_replace('/[\\x00-\\x1F\\x7F]+/u', ' ', $title);
         $title = preg_replace('/\\s+/u', ' ', $title);
         $title = trim($title, " .-\\t\\n\\r\\0\\x0B");
         return function_exists('mb_substr') ? mb_substr($title, 0, 180) : substr($title, 0, 180);
@@ -337,7 +338,7 @@ class GFCV_Shortcode {
             return '';
         }
         $value = rgar($entry, $field_id);
-        if ((null === $value || '' === trim((string) $value)) && false === strpos($field_id, '.')) {
+        if (!is_array($value) && !is_object($value) && (null === $value || '' === trim((string) $value)) && false === strpos($field_id, '.')) {
             foreach ((array) ($form['fields'] ?? array()) as $field) {
                 if ((string) $field->id !== $field_id || empty($field->inputs)) {
                     continue;
