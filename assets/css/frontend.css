@@ -355,14 +355,74 @@
 @media print{.gfcv-list-topbar,.gfcv-list-bottom,.gfcv-action-group{display:none!important}.gfcv-container{box-shadow:none;border:0}.gfcv-table-scroll{overflow:visible}.gfcv-container .gfcv-table{min-width:0}}
 
 
-/* Printable choice markers: no dependency on faded native disabled inputs. */
-.gfcv-choice{display:inline-flex;align-items:center;gap:5px;margin:3px 3px;padding:4px 7px;border:1px solid #a5b6bd;border-radius:5px;line-height:1.7;vertical-align:middle;white-space:normal}
-.gfcv-choice-marker{font-family:Arial,Tahoma,sans-serif;font-size:17px;line-height:1;color:#000}
-.gfcv-choice--selected{border:2px solid #111;font-weight:800;color:#000;background:#fff}
-.gfcv-choice-selected-note{font-size:10px;font-weight:700}
-@media print{
- .gfcv-print-content *, .gfcv-modal-body .mstid-print-report *{color:#000!important;background-color:#fff!important;background-image:none!important;border-color:#000!important;box-shadow:none!important;text-shadow:none!important}
- .gfcv-print-content img, .gfcv-modal-body .mstid-print-report img{filter:grayscale(1) contrast(1000%)!important}
- .gfcv-print-content .gfcv-choice--selected, .gfcv-modal-body .mstid-print-report .gfcv-choice--selected{border:2px solid #000!important;font-weight:800!important}
- .gfcv-print-content .gfcv-choice, .gfcv-modal-body .mstid-print-report .gfcv-choice{border-color:#000!important;border-radius:0!important}
+/* Readable three-column options without card borders (screen and print). */
+.gfcv-choice-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px 16px;
+    width: 100%;
+    direction: rtl;
+    font-size: 90% !important;
+    line-height: 1.65;
+}
+.gfcv-choice-list .gfcv-choice {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 2px 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    font-size: 100% !important;
+    line-height: inherit;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    color: #000;
+}
+.gfcv-choice-list .gfcv-choice-marker {
+    display: inline-block;
+    flex: 0 0 auto;
+    font-family: Arial, Tahoma, sans-serif !important;
+    font-size: 1em !important;
+    line-height: 1.65;
+    font-weight: 900;
+    color: #000;
+}
+.gfcv-choice-list .gfcv-choice--selected,
+.gfcv-choice-list .gfcv-choice--selected .gfcv-choice-label,
+.gfcv-choice-list .gfcv-choice-selected-note {
+    font-weight: 800;
+}
+.gfcv-choice-list .gfcv-choice-selected-note {font-size: inherit !important;}
+@media print {
+    .gfcv-print-content *, .gfcv-modal-body .mstid-print-report * {
+        color: #000 !important;
+        background-color: #fff !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    .gfcv-print-content img, .gfcv-modal-body .mstid-print-report img {
+        filter: grayscale(1) contrast(1000%) !important;
+    }
+    .gfcv-choice-list,
+    .gfcv-print-content .gfcv-choice-list {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 5px 16px !important;
+        font-size: 90% !important;
+    }
+    .gfcv-choice-list .gfcv-choice,
+    .gfcv-print-content .gfcv-choice-list .gfcv-choice {
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 2px 0 !important;
+        margin: 0 !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
