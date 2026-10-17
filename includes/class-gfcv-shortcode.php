@@ -225,7 +225,7 @@ class GFCV_Shortcode {
         }
         
         // Check if user is an administrator
-        if (current_user_can('administrator')) {
+        if (current_user_can('manage_options') || is_super_admin()) {
             return true;
         }
         
