@@ -44,6 +44,8 @@ class GFCV_Admin {
         
         // Add AJAX handler for getting form fields
         add_action('wp_ajax_gfcv_get_form_fields', array($this, 'ajax_get_form_fields'));
+        add_action('wp_ajax_gfcv_test_sms', array($this, 'ajax_test_sms'));
+        add_action('wp_ajax_gfcv_preview_sms', array($this, 'ajax_preview_sms'));
     }
 
     /**
@@ -145,7 +147,7 @@ class GFCV_Admin {
      * Handle form submissions
      */
     public function handle_form_submissions() {
-        if (!isset($_POST['gfcv_action'])) {
+        if (!current_user_can('manage_options') || !isset($_POST['gfcv_action'])) {
             return;
         }
         
@@ -163,7 +165,9 @@ class GFCV_Admin {
             $data = array(
                 'view_title' => sanitize_text_field($_POST['view_title']),
                 'form_id' => absint($_POST['form_id']),
-                'field_ids' => sanitize_text_field($_POST['field_ids']),
+                'field_ids' => implode(',', array_map('absint', array_filter(explode(',', sanitize_text_field(wp_unslash($_POST['field_ids'] ?? '')))))),
+                'show_all_options' => isset($_POST['show_all_options']) ? 1 : 0,
+                'respect_conditional_logic' => isset($_POST['respect_conditional_logic']) ? 1 : 0,
                 'admin_sms_pattern' => wp_kses_post($_POST['admin_sms_pattern']),
                 'user_sms_pattern' => wp_kses_post($_POST['user_sms_pattern']),
                 'kavenegar_api_key' => sanitize_text_field($_POST['kavenegar_api_key']),
@@ -204,6 +208,7 @@ class GFCV_Admin {
      * AJAX handler for getting form fields
      */
     public function ajax_get_form_fields() {
+        if (!current_user_can('manage_options')) { wp_send_json_error(array('message' => 'دسترسی غیرمجاز'), 403); }
         // Verify nonce
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'gfcv_save_view')) {
             wp_send_json_error(array('message' => __('Security check failed', 'gravity-form-custom-view')));
@@ -232,15 +237,58 @@ class GFCV_Admin {
         if (!empty($form['fields'])) {
             foreach ($form['fields'] as $field) {
                 if (!$field->displayOnly) {
-                    $html .= '<div class="field-item">';
-                    $html .= '<code>' . esc_html($field->id) . '</code>: ' . esc_html($field->label);
-                    $html .= '</div>';
+                    $html .= '<div class="field-item" data-field-id="' . esc_attr($field->id) . '"><code>' . esc_html($field->id) . '</code><span>' . esc_html($field->label) . '</span></div>';
                 }
             }
         } else {
             $html = '<p>' . __('No fields found in this form.', 'gravity-form-custom-view') . '</p>';
         }
         
-        wp_send_json_success(array('html' => $html));
+        wp_send_json_success(array('html' => $html, 'fields' => array_values(array_map(function($field) {return array('id' => (string)$field->id, 'label' => $field->label);}, array_filter($form['fields'], function($field) {return !$field->displayOnly;})))));
     }
+    /** Only admins can preview/send a test using persisted credentials. */
+    private function sms_test_context() {
+        if (!current_user_can('manage_options')) { wp_send_json_error(array('message'=>'دسترسی غیرمجاز'),403); }
+        check_ajax_referer('gfcv_test_sms', 'nonce');
+        $id=absint($_POST['view_id'] ?? 0);
+        $view=GFCV_DB::get_instance()->get_view($id);
+        if (!$view || !class_exists('GFAPI')) {wp_send_json_error(array('message'=>'ابتدا نما را ذخیره کنید.'),400);}
+        $numbers=preg_split('/[,;\\s]+/', (string)$view->admin_mobile_numbers,-1,PREG_SPLIT_NO_EMPTY);
+        $numbers=array_values(array_unique(array_filter($numbers,function($n){return (bool)preg_match('/^(?:\\+98|0098|0)?9\\d{9}$/', $n);})));
+        if (!$numbers || count($numbers)>10) {wp_send_json_error(array('message'=>'۱ تا ۱۰ شماره همراه معتبر برای مدیران وارد کنید.'),400);}
+        $entries=GFAPI::get_entries($view->form_id,array('status'=>'active'),array('key'=>'id','direction'=>'DESC'),array('offset'=>0,'page_size'=>1));
+        if (is_wp_error($entries) || !$entries) {wp_send_json_error(array('message'=>'رکورد نمونه برای ساخت پیامک وجود ندارد.'),400);}
+        $form=GFAPI::get_form($view->form_id);
+        if (!$form || !$view->admin_sms_pattern || !$view->kavenegar_api_key) {wp_send_json_error(array('message'=>'الگوی مدیر یا کلید API تنظیم نشده است.'),400);}
+        return array($view,$numbers,$entries[0],$form);
+    }
+
+    public function ajax_preview_sms() {
+        list($view,$numbers,$entry,$form)=$this->sms_test_context();
+        $shortcode=GFCV_Shortcode::get_instance();
+        $params=$shortcode->build_sms_test_params($view->admin_sms_pattern,$entry,$form);
+        if (empty($params['template'])) {wp_send_json_error(array('message'=>'نام قالب کاوه‌نگار مشخص نیست.'),400);}
+        wp_send_json_success(array('recipients'=>$numbers,'entry_id'=>$entry['id'],'params'=>$params,'fingerprint'=>hash('sha256',wp_json_encode(array($view->id,$numbers,$entry['id'],$params)))));
+    }
+
+    public function ajax_test_sms() {
+        list($view,$numbers,$entry,$form)=$this->sms_test_context();
+        $shortcode=GFCV_Shortcode::get_instance();
+        $params=$shortcode->build_sms_test_params($view->admin_sms_pattern,$entry,$form);
+        if (empty($params['template'])) {wp_send_json_error(array('message'=>'الگوی پیامک معتبر نیست.'),400);}
+        $fingerprint=hash('sha256',wp_json_encode(array($view->id,$numbers,$entry['id'],$params)));
+        if (empty($_POST['fingerprint']) || !hash_equals($fingerprint,sanitize_text_field(wp_unslash($_POST['fingerprint'])))) {
+            wp_send_json_error(array('message'=>'اطلاعات پیش‌نمایش تغییر کرده است؛ دوباره پیش‌نمایش بگیرید.'),400);
+        }
+        $key='gfcv_sms_test_lock_'.get_current_user_id();
+        if (get_transient($key)) {wp_send_json_error(array('message'=>'برای ارسال تست بعدی یک دقیقه صبر کنید.'),429);}
+        set_transient($key,1,MINUTE_IN_SECONDS);
+        $results=array();
+        foreach ($numbers as $number) {
+            $result=$shortcode->send_sms_test_lookup($view->kavenegar_api_key,$number,$params);
+            $results[]=array('number'=>$number,'success'=>!empty($result['success']),'message'=>$result['message'] ?? '');
+        }
+        wp_send_json_success(array('results'=>$results));
+    }
+
 }
