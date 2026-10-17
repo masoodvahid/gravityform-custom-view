@@ -144,31 +144,25 @@
                 return;
             }
 
-            var css = [
-                '@page { size: A4; margin: 12mm; }',
-                'html,body { direction:rtl; margin:0; padding:0; background:#fff!important; color:#000!important; }',
-                'body { font-family:Tahoma,Arial,sans-serif; font-size:12px; }',
-                '.gfcv-print-content { width:100%; max-width:100%; color:#000!important; background:#fff!important; }',
-                '.gfcv-print-content *, .gfcv-print-content *::before, .gfcv-print-content *::after { color:#000!important; background-color:#fff!important; background-image:none!important; border-color:#000!important; box-shadow:none!important; text-shadow:none!important; }',
-                '.gfcv-print-content .mstid-print-report { max-width:none!important; width:100%!important; }',
-                '.gfcv-print-content table { border-collapse:collapse!important; margin-bottom:9px; page-break-inside:auto!important; }',
-                '.gfcv-print-content .mstid-section { border:1px solid #000!important; border-radius:0!important; }',
-                '.gfcv-print-content .mstid-section th { background:#fff!important; border-bottom:2px solid #000!important; border-right:4px solid #000!important; font-weight:800!important; }',
-                '.gfcv-print-content .mstid-data-row td { border-bottom:1px solid #000!important; }',
-                '.gfcv-print-content .mstid-answer { background:#fff!important; border-right:3px solid #000!important; border-radius:0!important; }',
-                '.gfcv-print-content tr { break-inside:avoid; page-break-inside:avoid; }',
-                '.gfcv-print-content img { filter:grayscale(1) contrast(1000%)!important; }',
-                '.gfcv-print-content .gfcv-choice-list { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr))!important; gap:5px 16px!important; width:100%!important; direction:rtl!important; font-size:90%!important; }',
-                '.gfcv-print-content .gfcv-choice-list .gfcv-choice { display:flex!important; align-items:flex-start!important; gap:5px!important; min-width:0!important; margin:0!important; padding:2px 0!important; border:none!important; border-radius:0!important; box-shadow:none!important; background:#fff!important; color:#000!important; font-size:100%!important; line-height:1.65!important; overflow-wrap:anywhere!important; break-inside:avoid!important; }',
-                '.gfcv-print-content .gfcv-choice--selected { border:none!important; font-weight:800!important; }',
-                '.gfcv-print-content .gfcv-choice-marker { font-family:Arial,Tahoma,sans-serif!important; font-size:1em!important; color:#000!important; line-height:1.65!important; }',
-                '.gfcv-print-content .gfcv-choice-selected-note { font-weight:700!important; color:#000!important; }',
-                '.gfcv-print-content a { color:#000!important; text-decoration:underline!important; }',
-                '.gfcv-print-content .gfcv-choice-marker { font-weight:900!important; opacity:1!important; }'
-            ].join(' ');
+            // The HTML template is intentionally class-only. Load its reusable
+            // stylesheet here as well as the A4/page-number print stylesheet.
+            // CSS page margin boxes produce "صفحه X از Y" per printed page.
+            var reportCssUrl = gfcv_vars.report_css_url;
+            var printCssUrl = gfcv_vars.report_print_css_url;
+            var safeHref = function(url) {
+                return String(url).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            };
 
             printWindow.document.open();
-            printWindow.document.write('<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش آرشیوی پرسشنامه</title><style>' + css + '</style></head><body><main class="gfcv-print-content">' + modalContent + '</main></body></html>');
+            printWindow.document.write(
+                '<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8">' +
+                '<title>گزارش آرشیوی پرسشنامه</title>' +
+                '<link rel="stylesheet" href="' + safeHref(reportCssUrl) + '">' +
+                '<link rel="stylesheet" href="' + safeHref(printCssUrl) + '">' +
+                '</head><body class="gfcv-print-document">' +
+                '<main class="gfcv-print-content">' + modalContent + '</main>' +
+                '</body></html>'
+            );
             printWindow.document.close();
 
             // Legacy templates or cached markup may still contain disabled
@@ -222,19 +216,34 @@
                 labels.forEach(function(label) { grid.appendChild(label); });
             });
 
-            // Give the logo and fonts time to finish loading before printing.
-            var images = Array.prototype.slice.call(printWindow.document.images);
-            var finished = Promise.all(images.map(function(img) {
+            // Wait for linked CSS, images and fonts before opening the print
+            // dialog. A bounded fallback avoids leaving the popup unusable
+            // when an optional remote logo/font never resolves.
+            var styles = Array.prototype.slice.call(printDocument.querySelectorAll('link[rel="stylesheet"]'));
+            var stylesReady = Promise.all(styles.map(function(link) {
+                if (link.sheet) {
+                    return Promise.resolve();
+                }
+                return new Promise(function(resolve) {
+                    link.addEventListener('load', resolve, { once: true });
+                    link.addEventListener('error', resolve, { once: true });
+                });
+            }));
+            var images = Array.prototype.slice.call(printDocument.images);
+            var imagesReady = Promise.all(images.map(function(img) {
                 if (img.complete) {
                     return Promise.resolve();
                 }
                 return new Promise(function(resolve) {
-                    img.addEventListener('load', resolve, { once:true });
-                    img.addEventListener('error', resolve, { once:true });
+                    img.addEventListener('load', resolve, { once: true });
+                    img.addEventListener('error', resolve, { once: true });
                 });
             }));
-            var timeout = new Promise(function(resolve) { setTimeout(resolve, 2000); });
-            Promise.race([finished, timeout]).then(function() {
+            var fontsReady = printDocument.fonts && printDocument.fonts.ready
+                ? printDocument.fonts.ready.catch(function() {})
+                : Promise.resolve();
+            var deadline = new Promise(function(resolve) { setTimeout(resolve, 5000); });
+            Promise.race([Promise.all([stylesReady, imagesReady, fontsReady]), deadline]).then(function() {
                 if (!printWindow.closed) {
                     printWindow.focus();
                     printWindow.print();
