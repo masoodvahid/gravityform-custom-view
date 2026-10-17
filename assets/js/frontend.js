@@ -163,12 +163,42 @@
                 '.gfcv-print-content .gfcv-choice-marker { font-family:Arial,Tahoma,sans-serif!important; font-size:17px!important; color:#000!important; line-height:1; }',
                 '.gfcv-print-content .gfcv-choice-selected-note { font-weight:700!important; color:#000!important; }',
                 '.gfcv-print-content a { color:#000!important; text-decoration:underline!important; }',
-                '.gfcv-print-content input[type=radio], .gfcv-print-content input[type=checkbox] { accent-color:#000!important; opacity:1!important; filter:grayscale(1) contrast(1000%)!important; }'
+                '.gfcv-print-content .gfcv-choice-marker { font-weight:900!important; opacity:1!important; }'
             ].join(' ');
 
             printWindow.document.open();
             printWindow.document.write('<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش آرشیوی پرسشنامه</title><style>' + css + '</style></head><body><main class="gfcv-print-content">' + modalContent + '</main></body></html>');
             printWindow.document.close();
+
+            // Legacy templates or cached markup may still contain disabled
+            // native form controls. Convert them into ink-safe static symbols
+            // in the print document only. The original entry and preview are
+            // not modified, and there are no disabled inputs left to fade.
+            var printDocument = printWindow.document;
+            var legacyChoices = printDocument.querySelectorAll('input[type="checkbox"], input[type="radio"]');
+            Array.prototype.forEach.call(legacyChoices, function(input) {
+                var selected = !!input.checked || input.hasAttribute('checked');
+                var isRadio = input.type === 'radio';
+                var symbol = printDocument.createElement('span');
+                symbol.className = 'gfcv-choice-marker';
+                symbol.setAttribute('aria-hidden', 'true');
+                symbol.textContent = selected ? (isRadio ? '●' : '■') : (isRadio ? '○' : '□');
+
+                var label = input.closest('label');
+                if (label) {
+                    label.classList.add('gfcv-choice');
+                    label.classList.add(selected ? 'gfcv-choice--selected' : 'gfcv-choice--unselected');
+                }
+
+                input.parentNode.replaceChild(symbol, input);
+
+                if (selected && label && !label.querySelector('.gfcv-choice-selected-note')) {
+                    var note = printDocument.createElement('strong');
+                    note.className = 'gfcv-choice-selected-note';
+                    note.textContent = ' (انتخاب‌شده)';
+                    label.appendChild(note);
+                }
+            });
 
             // Give the logo and fonts time to finish loading before printing.
             var images = Array.prototype.slice.call(printWindow.document.images);
