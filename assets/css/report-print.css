@@ -11,13 +11,23 @@
         content: "صفحه " counter(page) " از " counter(pages);
         color: #000;
         background: #fff;
-        font-family: Tahoma, Arial, sans-serif;
+        font-family: 'GFCV IranYekan', 'IRANYekan', 'IranYekan', 'IRANYekanX', Tahoma, Arial, sans-serif;
         font-weight: 700;
         font-size: 9pt;
         border-top: 0.4pt solid #000;
         padding-top: 2mm;
     }
 }
+/* Enforce IranYekan for the print document, including labels, tables,
+ * answers and headings. GFCV IranYekan is a self-hosted optional font face
+ * loaded from the admin-configured URL before the browser print dialog.
+ * If no file is configured, an OS-installed IranYekan is used if available. */
+body.gfcv-print-document,
+.gfcv-print-content,
+.gfcv-print-content *:not(.gfcv-choice-marker) {
+    font-family: 'GFCV IranYekan', 'IRANYekan', 'IranYekan', 'IRANYekanX', Tahoma, Arial, sans-serif !important;
+}
+
 html, body {
     direction: rtl;
     margin: 0;

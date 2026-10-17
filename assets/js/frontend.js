@@ -170,6 +170,30 @@
             // in the print document only. The original entry and preview are
             // not modified, and there are no disabled inputs left to fade.
             var printDocument = printWindow.document;
+
+            // FontFace is explicitly registered inside the new print window:
+            // its document does not inherit the website's @font-face rules.
+            // This uses a licensed user-hosted font URL, not a bundled binary.
+            var customPrintFontReady = Promise.resolve();
+            var customPrintFontUrl = gfcv_vars.print_font_url || '';
+            if (customPrintFontUrl && typeof printWindow.FontFace === 'function' && printDocument.fonts) {
+                try {
+                    var iranYekanFace = new printWindow.FontFace(
+                        'GFCV IranYekan',
+                        'url(' + JSON.stringify(customPrintFontUrl) + ')',
+                        { style: 'normal', weight: '100 900' }
+                    );
+                    customPrintFontReady = iranYekanFace.load().then(function(face) {
+                        printDocument.fonts.add(face);
+                    }).catch(function() {
+                        // Keep the print action available with a local fallback.
+                        printWindow.console.warn('GFCV: Unable to load custom IranYekan print font.');
+                    });
+                } catch (fontError) {
+                    printWindow.console.warn('GFCV: Invalid IranYekan font configuration.', fontError);
+                }
+            }
+
             var legacyChoices = printDocument.querySelectorAll('input[type="checkbox"], input[type="radio"]');
             Array.prototype.forEach.call(legacyChoices, function(input) {
                 var selected = !!input.checked || input.hasAttribute('checked');
@@ -242,8 +266,8 @@
             var fontsReady = printDocument.fonts && printDocument.fonts.ready
                 ? printDocument.fonts.ready.catch(function() {})
                 : Promise.resolve();
-            var deadline = new Promise(function(resolve) { setTimeout(resolve, 5000); });
-            Promise.race([Promise.all([stylesReady, imagesReady, fontsReady]), deadline]).then(function() {
+            var deadline = new Promise(function(resolve) { setTimeout(resolve, 8000); });
+            Promise.race([Promise.all([stylesReady, imagesReady, fontsReady, customPrintFontReady]), deadline]).then(function() {
                 if (!printWindow.closed) {
                     printWindow.focus();
                     printWindow.print();

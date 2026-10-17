@@ -21,6 +21,27 @@ if (!defined('ABSPATH')) {
     </div>
     <?php endif; ?>
     
+    <div class="gfcv-admin-form" style="margin:18px 0;padding:18px 22px;max-width:920px">
+        <h2 style="margin:0 0 8px">فونت چاپ گزارش‌ها — IranYekan</h2>
+        <p class="description">برای نمایش دقیق فونت IranYekan روی PDF و برگه چاپی، آدرس مستقیم فایل قانونی فونت خودتان را وارد کنید (ترجیحاً WOFF2 روی همین دامنه). اگر این بخش خالی باشد فقط از فونت IranYekan نصب‌شده روی دستگاه استفاده می‌شود و نمایش آن تضمین نیست.</p>
+        <?php if (isset($_GET['font_updated'])) : ?>
+            <div class="notice notice-success inline"><p>تنظیم فونت چاپ ذخیره شد.</p></div>
+        <?php endif; ?>
+        <?php if (isset($_GET['font_error'])) : ?>
+            <div class="notice notice-error inline"><p>آدرس معتبر HTTPS/HTTP با پسوند WOFF2، WOFF، TTF یا OTF وارد کنید.</p></div>
+        <?php endif; ?>
+        <form method="post" action="">
+            <?php wp_nonce_field('gfcv_save_view', 'gfcv_nonce'); ?>
+            <input type="hidden" name="gfcv_action" value="save_print_font">
+            <label for="gfcv_print_font_url" style="display:block;font-weight:700;margin:11px 0 6px">آدرس فایل فونت IranYekan</label>
+            <input type="url" dir="ltr" id="gfcv_print_font_url" name="gfcv_print_font_url"
+                value="<?php echo esc_attr(get_option('gfcv_print_font_url', '')); ?>"
+                placeholder="https://example.com/wp-content/uploads/fonts/IRANYekan.woff2"
+                class="large-text" style="max-width:730px;width:100%">
+            <p><button type="submit" class="button button-primary">ذخیره فونت چاپ</button></p>
+        </form>
+    </div>
+
     <table class="wp-list-table widefat fixed striped gfcv-views-table">
         <thead>
             <tr>
