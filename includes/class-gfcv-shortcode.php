@@ -690,52 +690,17 @@ class GFCV_Shortcode {
      * @return array The lookup parameters
      */
     private function parse_kavenegar_pattern($pattern, $entry, $form) {
+        $processed = $this->process_template($pattern, $entry, $form, false);
         $params = array();
-        
-        // Process the pattern first to replace all merge tags
-        $processed_pattern = $this->process_template($pattern, $entry, $form);
-        
-        // Extract key-value pairs from the pattern
-        $pairs = explode('token', $processed_pattern);
-        
-        foreach ($pairs as $pair) {
-            if (empty($pair)) continue;
-            
-            // Check if this is a token parameter
-            if (strpos($pair, '=') === 0) {
-                $token_parts = explode('=', $pair, 2);
-                if (count($token_parts) === 2) {
-                    $token_number = '';
-                    $token_value = $token_parts[1];
-                    
-                    // Extract token number if it exists
-                    if (preg_match('/^(\d+)(.*)/', $token_parts[0], $matches)) {
-                        $token_number = $matches[1];
-                        // If there's more content after the token number, it belongs to the next parameter
-                        if (!empty($matches[2])) {
-                            // Find where the next parameter starts
-                            $next_param_pos = strpos($token_value, $matches[2]);
-                            if ($next_param_pos !== false) {
-                                $token_value = substr($token_value, 0, $next_param_pos);
-                            }
-                        }
-                    }
-                    
-                    $token_key = 'token' . $token_number;
-                    $params[$token_key] = $token_value;
-                }
-            } else if (strpos($pair, 'template=') !== false) {
-                // Extract template parameter
-                $template_parts = explode('=', $pair, 2);
-                if (count($template_parts) === 2) {
-                    $params['template'] = trim($template_parts[1]);
-                }
-            }
+        // Existing templates are encoded as token=...token2=...template=...
+        // Capture each value up to the next recognized parameter.
+        preg_match_all('/(?:^|(?<=\\s)|(?<=[^a-zA-Z]))(token(?:2|3|10|20)?|template)=(.*?)(?=token(?:2|3|10|20)?=|template=|$)/us', $processed, $matches, PREG_SET_ORDER);
+        foreach ($matches as $match) {
+            $params[$match[1]] = trim($match[2]);
         }
-        
         return $params;
     }
-    
+
     /**
      * Send SMS via Kavenegar Lookup API
      *
