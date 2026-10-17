@@ -164,7 +164,7 @@
                 '.gfcv-print-content .gfcv-choice-selected-note { font-weight:700!important; color:#000!important; }',
                 '.gfcv-print-content a { color:#000!important; text-decoration:underline!important; }',
                 '.gfcv-print-content input[type=radio], .gfcv-print-content input[type=checkbox] { accent-color:#000!important; opacity:1!important; filter:grayscale(1) contrast(1000%)!important; }'
-            ].join('\\n');
+            ].join(' ');
 
             printWindow.document.open();
             printWindow.document.write('<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش آرشیوی پرسشنامه</title><style>' + css + '</style></head><body><main class="gfcv-print-content">' + modalContent + '</main></body></html>');
