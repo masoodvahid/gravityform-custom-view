@@ -158,9 +158,10 @@
                 '.gfcv-print-content .mstid-answer { background:#fff!important; border-right:3px solid #000!important; border-radius:0!important; }',
                 '.gfcv-print-content tr { break-inside:avoid; page-break-inside:avoid; }',
                 '.gfcv-print-content img { filter:grayscale(1) contrast(1000%)!important; }',
-                '.gfcv-print-content .gfcv-choice { display:inline-flex!important; align-items:center!important; gap:5px; margin:3px 3px; padding:3px 7px; border:1px solid #000!important; border-radius:0!important; background:#fff!important; color:#000!important; white-space:normal; }',
-                '.gfcv-print-content .gfcv-choice--selected { border:2px solid #000!important; font-weight:800!important; }',
-                '.gfcv-print-content .gfcv-choice-marker { font-family:Arial,Tahoma,sans-serif!important; font-size:17px!important; color:#000!important; line-height:1; }',
+                '.gfcv-print-content .gfcv-choice-list { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr))!important; gap:5px 16px!important; width:100%!important; direction:rtl!important; font-size:90%!important; }',
+                '.gfcv-print-content .gfcv-choice-list .gfcv-choice { display:flex!important; align-items:flex-start!important; gap:5px!important; min-width:0!important; margin:0!important; padding:2px 0!important; border:none!important; border-radius:0!important; box-shadow:none!important; background:#fff!important; color:#000!important; font-size:100%!important; line-height:1.65!important; overflow-wrap:anywhere!important; break-inside:avoid!important; }',
+                '.gfcv-print-content .gfcv-choice--selected { border:none!important; font-weight:800!important; }',
+                '.gfcv-print-content .gfcv-choice-marker { font-family:Arial,Tahoma,sans-serif!important; font-size:1em!important; color:#000!important; line-height:1.65!important; }',
                 '.gfcv-print-content .gfcv-choice-selected-note { font-weight:700!important; color:#000!important; }',
                 '.gfcv-print-content a { color:#000!important; text-decoration:underline!important; }',
                 '.gfcv-print-content .gfcv-choice-marker { font-weight:900!important; opacity:1!important; }'
@@ -198,6 +199,27 @@
                     note.textContent = ' (انتخاب‌شده)';
                     label.appendChild(note);
                 }
+            });
+
+            // Group old label-based answer options into the same three-column
+            // grid as the current PHP-rendered markup (without editing stored data).
+            var legacyContainers = printDocument.querySelectorAll('.mstid-answer');
+            Array.prototype.forEach.call(legacyContainers, function(container) {
+                if (container.querySelector('.gfcv-choice-list')) {
+                    return;
+                }
+                var labels = Array.prototype.slice.call(container.querySelectorAll('label.gfcv-choice'));
+                if (!labels.length) {
+                    return;
+                }
+                var parent = labels[0].parentNode;
+                if (!labels.every(function(label) { return label.parentNode === parent; })) {
+                    return;
+                }
+                var grid = printDocument.createElement('div');
+                grid.className = 'gfcv-choice-list';
+                parent.insertBefore(grid, labels[0]);
+                labels.forEach(function(label) { grid.appendChild(label); });
             });
 
             // Give the logo and fonts time to finish loading before printing.
