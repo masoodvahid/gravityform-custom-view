@@ -131,48 +131,63 @@
                 $('.gfcv-modal').hide();
             }
         });
-        // Print Preview button click for details modal
-        $(document).on('click', '.gfcv-btn-print', function() {    
-            var printWindow = window.open('', '', 'height=600,width=800');
-            var modalContent = $('.gfcv-modal-body').html();
-			var modalTitle = $('#invest-number').text() + '-' + $('#invest-name').text();
-            printWindow.document.write('<html><head><title>'+ modalTitle +'</title>');
-            // Include all necessary stylesheets
-            printWindow.document.write('<link rel="stylesheet" href="' + gfcv_vars.frontend_css_url + '">');
-            printWindow.document.write('<link rel="stylesheet" href="' + gfcv_vars.custom_buttons_css_url + '">');        
-                        
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@33.003/misc/Farsi-Digits/Vazirmatn-FD-font-face.css" rel="stylesheet"></link>');
-                         
-             printWindow.document.write('<style>');
-            printWindow.document.write('body, .gfcv-modal-body, th, td, h1, h2, h3, h4, h5, h6 { font-family: B Nazanin, sans-serif !important; font-size:100% }');            
-            printWindow.document.write('body { direction: rtl; padding: 10px; }');
-            printWindow.document.write('.gfcv-modal-body { margin: 0 auto; max-width: 800px; }');
-            printWindow.document.write('.gfcv-file-uploads { margin: 10px 0; }');
-            printWindow.document.write('.gfcv-file-link { display: inline-flex; align-items: center; margin: 1px 0; padding: 2px; background-color: #f5f5f5; border-radius: 4px; text-decoration: none; color: #333; }');
-            printWindow.document.write('.gfcv-file-link .dashicons {color: #0073aa; }');
-            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-bottom: 10px; page-break-inside: avoid;}');
-            printWindow.document.write('table, th, td { border: 1px solid #000; vertical-align: top;  }');
-            printWindow.document.write('th, td { padding: 7px; text-align: right; font-family: B Nazanin, Tahoma, Arial, sans-serif; font-size: 110%;}');
-            printWindow.document.write('th { background-color: #f5f5f5; }');
-            printWindow.document.write('h1, h2, h3, h4, h5, h6, p, span, div, table { font-family: B Nazanin, Tahoma, Arial, sans-serif; }');
-            // Enable Farsi digits for all elements
-            
-            printWindow.document.write('@media print { body { padding: 0; } }');
-            printWindow.document.write('</style>');
-            
-            printWindow.document.write('</head><body dir="rtl">');
-            // Add the content
-            printWindow.document.write('<div class="gfcv-print-content">' + modalContent + '</div>');
-            printWindow.document.write('</body></html>');
-            
-            // Ensure content is loaded before printing
+        // Archive print: pure black ink on white paper, even when the source
+        // HTML uses inline theme colors. No faded native checkbox rendering.
+        $(document).on('click', '.gfcv-btn-print', function() {
+            var modalContent = $('#gfcv-modal-details .gfcv-modal-body').html();
+            if (!modalContent) {
+                return;
+            }
+            var printWindow = window.open('', '_blank', 'height=800,width=1000');
+            if (!printWindow) {
+                window.alert('لطفاً نمایش پنجره جدید را برای چاپ مجاز کنید.');
+                return;
+            }
+
+            var css = [
+                '@page { size: A4; margin: 12mm; }',
+                'html,body { direction:rtl; margin:0; padding:0; background:#fff!important; color:#000!important; }',
+                'body { font-family:Tahoma,Arial,sans-serif; font-size:12px; }',
+                '.gfcv-print-content { width:100%; max-width:100%; color:#000!important; background:#fff!important; }',
+                '.gfcv-print-content *, .gfcv-print-content *::before, .gfcv-print-content *::after { color:#000!important; background-color:#fff!important; background-image:none!important; border-color:#000!important; box-shadow:none!important; text-shadow:none!important; }',
+                '.gfcv-print-content .mstid-print-report { max-width:none!important; width:100%!important; }',
+                '.gfcv-print-content table { border-collapse:collapse!important; margin-bottom:9px; page-break-inside:auto!important; }',
+                '.gfcv-print-content .mstid-section { border:1px solid #000!important; border-radius:0!important; }',
+                '.gfcv-print-content .mstid-section th { background:#fff!important; border-bottom:2px solid #000!important; border-right:4px solid #000!important; font-weight:800!important; }',
+                '.gfcv-print-content .mstid-data-row td { border-bottom:1px solid #000!important; }',
+                '.gfcv-print-content .mstid-answer { background:#fff!important; border-right:3px solid #000!important; border-radius:0!important; }',
+                '.gfcv-print-content tr { break-inside:avoid; page-break-inside:avoid; }',
+                '.gfcv-print-content img { filter:grayscale(1) contrast(1000%)!important; }',
+                '.gfcv-print-content .gfcv-choice { display:inline-flex!important; align-items:center!important; gap:5px; margin:3px 3px; padding:3px 7px; border:1px solid #000!important; border-radius:0!important; background:#fff!important; color:#000!important; white-space:normal; }',
+                '.gfcv-print-content .gfcv-choice--selected { border:2px solid #000!important; font-weight:800!important; }',
+                '.gfcv-print-content .gfcv-choice-marker { font-family:Arial,Tahoma,sans-serif!important; font-size:17px!important; color:#000!important; line-height:1; }',
+                '.gfcv-print-content .gfcv-choice-selected-note { font-weight:700!important; color:#000!important; }',
+                '.gfcv-print-content a { color:#000!important; text-decoration:underline!important; }',
+                '.gfcv-print-content input[type=radio], .gfcv-print-content input[type=checkbox] { accent-color:#000!important; opacity:1!important; filter:grayscale(1) contrast(1000%)!important; }'
+            ].join(' ');
+
+            printWindow.document.open();
+            printWindow.document.write('<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش آرشیوی پرسشنامه</title><style>' + css + '</style></head><body><main class="gfcv-print-content">' + modalContent + '</main></body></html>');
             printWindow.document.close();
-            
-            // Wait for resources to load before triggering print
-            setTimeout(function() {
-                printWindow.focus();
-                printWindow.print();
-            }, 2000);
+
+            // Give the logo and fonts time to finish loading before printing.
+            var images = Array.prototype.slice.call(printWindow.document.images);
+            var finished = Promise.all(images.map(function(img) {
+                if (img.complete) {
+                    return Promise.resolve();
+                }
+                return new Promise(function(resolve) {
+                    img.addEventListener('load', resolve, { once:true });
+                    img.addEventListener('error', resolve, { once:true });
+                });
+            }));
+            var timeout = new Promise(function(resolve) { setTimeout(resolve, 2000); });
+            Promise.race([finished, timeout]).then(function() {
+                if (!printWindow.closed) {
+                    printWindow.focus();
+                    printWindow.print();
+                }
+            });
         });
     });
     
