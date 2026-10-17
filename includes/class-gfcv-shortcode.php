@@ -108,8 +108,8 @@ class GFCV_Shortcode {
                     'error_text' => __('خطا در بارگذاری اطلاعات', 'gravity-form-custom-view'),
                     'frontend_css_url' => GFCV_PLUGIN_URL . 'assets/css/frontend.css',
                     'custom_buttons_css_url' => GFCV_PLUGIN_URL . 'assets/css/custom-buttons.css',
-                    'report_css_url' => GFCV_PLUGIN_URL . 'assets/css/report.css',
-                    'report_print_css_url' => GFCV_PLUGIN_URL . 'assets/css/report-print.css'
+                    'report_css_url' => add_query_arg('ver', GFCV_PLUGIN_VERSION, GFCV_PLUGIN_URL . 'assets/css/report.css'),
+                    'report_print_css_url' => add_query_arg('ver', GFCV_PLUGIN_VERSION, GFCV_PLUGIN_URL . 'assets/css/report-print.css')
                 )
             );
         }
