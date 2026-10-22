@@ -46,7 +46,7 @@ $(function(){
    if(!formId){$('#field_list').html('<p>ابتدا فرم را انتخاب کنید.</p>');readFields();return;}
    $('#field_list').html('<p>در حال بارگذاری فیلدها...</p>');
    $.post(ajaxurl,{action:'gfcv_get_form_fields',form_id:formId,nonce:$('#gfcv_nonce').val()},function(resp){
-      if(resp&&resp.success){$('#field_list').html(resp.data.html);readFields();fillPdfNameFields(resp.data.pdf_fields||resp.data.fields||[]);}
+      if(resp&&resp.success){$('#field_list').html(resp.data.html);readFields();fillPdfNameFields(resp.data.pdf_fields||resp.data.fields||[]);$(document).trigger('gfcv:form-fields-loaded',[resp.data.pdf_fields||resp.data.fields||[]]);}
       else $('#field_list').text('خطا در دریافت فیلدهای فرم');
    }).fail(function(){$('#field_list').text('خطا در ارتباط با سرور');});
  });
