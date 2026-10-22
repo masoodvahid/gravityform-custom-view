@@ -75,7 +75,7 @@ class GFCV_Kavenegar {
         }
         $mode = sanitize_key(wp_unslash($_POST['mode'] ?? 'latest'));
         $limit = 100;
-        $query = array('sender'=>'');
+        $query = array('sender'=>'0');
         if ($mode === 'range') {
             $start = self::parse_date(sanitize_text_field(wp_unslash($_POST['from'] ?? '')));
             $end = self::parse_date(sanitize_text_field(wp_unslash($_POST['to'] ?? '')));
@@ -86,11 +86,11 @@ class GFCV_Kavenegar {
             $query = array(
                 'startdate'=>$start->getTimestamp(),
                 'enddate'=>$end->getTimestamp()+DAY_IN_SECONDS-1,
-                'sender'=>''
+                'sender'=>'0'
             );
         } elseif ($mode === 'latest') {
             $endpoint = 'latestoutbox';
-            $query = array('pagesize'=>$limit,'sender'=>'');
+            $query = array('pagesize'=>$limit,'sender'=>'0');
         } else {
             wp_send_json_error(array('message'=>'نوع گزارش معتبر نیست.'),400);
         }
@@ -103,7 +103,15 @@ class GFCV_Kavenegar {
             'headers'=>array('Accept'=>'application/json')
         ));
         if (is_wp_error($response)) {
-            wp_send_json_error(array('message'=>'ارتباط با سرویس کاوه‌نگار برقرار نشد.'),502);
+            // Avoid exposing the API secret even when cURL prints the URL.
+            $reason = sanitize_text_field(str_replace(
+                $key, '[کلید مخفی]', (string) $response->get_error_message()
+            ));
+            $reason = preg_replace('/https?:\\/\\/api\\.kavenegar\\.com\\/[^\\s]+/iu', '[نشانی امن API]', $reason);
+            wp_send_json_error(array(
+                'message'=>'عدم ارتباط سرور با کاوه‌نگار: ' . $reason,
+                'code'=>'network_error'
+            ),502);
         }
         $status = wp_remote_retrieve_response_code($response);
         $data = json_decode(wp_remote_retrieve_body($response), true);
@@ -112,7 +120,7 @@ class GFCV_Kavenegar {
             $message = (string)($data['return']['message'] ?? 'پاسخ سرویس قابل پردازش نیست.');
             $message = str_replace($key, '[کلید]', $message);
             $message = preg_replace('/(?:https?:\/\/)?api\.kavenegar\.com\/[^\s]+/iu', '[نشانی API]', $message);
-            wp_send_json_error(array('message'=>'دریافت گزارش پیامک انجام نشد: ' . sanitize_text_field($message)),502);
+            wp_send_json_error(array('message'=>'دریافت گزارش پیامک انجام نشد (HTTP ' . (int)$status . '): ' . sanitize_text_field($message), 'code'=>'provider_error'),502);
         }
         $entries = isset($data['entries']) && is_array($data['entries']) ? $data['entries'] : array();
         $rows = array();

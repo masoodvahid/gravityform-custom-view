@@ -193,6 +193,18 @@ if ($is_edit) {
                 <label class="gfcv-setting"><input type="checkbox" name="respect_conditional_logic" value="1" <?php checked($view_data['respect_conditional_logic'], 1); ?>> نمایش فیلدهای شرطی فقط در صورت برقراری شرط</label>
                 <p class="description">این گزینه برای قالب‌های جزئیات دارای data-gf-field کار می‌کند.</p>
             </td></tr>
+            <?php if (GFCV_Kavenegar::get_key() === '') : ?>
+            <tr>
+                <th scope="row">وضعیت سرویس پیامک</th>
+                <td>
+                    <div class="notice notice-warning inline">
+                        <p>کلید API سراسری کاوه‌نگار هنوز ثبت نشده است؛ برای ارسال آزمایشی ابتدا
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view#gfcv-service-settings')); ?>" class="gfcv-api-settings-link">تنظیمات پیامک</a>
+                        را تکمیل کنید.</p>
+                    </div>
+                </td>
+            </tr>
+            <?php endif; ?>
             <tr class="gfcv-sms-settings-row">
                 <th scope="row">تنظیمات پیامک‌های الگو</th>
                 <td>

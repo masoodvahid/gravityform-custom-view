@@ -42,10 +42,10 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
             <p>لیست‌های متصل به فرم‌ها را از همین‌جا مدیریت کنید، کد کوتاه آن‌ها را بردارید و تنظیمات دسترسی و پیامک را ویرایش کنید.</p>
         </div>
         <div class="gfcv-dashboard-hero-actions">
-            <button type="button" id="gfcv-show-outbox" class="button button-secondary" aria-controls="gfcv-dashboard-outbox" aria-expanded="false">
+            <a href="#gfcv-dashboard-outbox" id="gfcv-show-outbox" class="button button-secondary" aria-controls="gfcv-dashboard-outbox" aria-expanded="false">
                 <span class="dashicons dashicons-email-alt" aria-hidden="true"></span>
                 گزارش پیامک‌های ارسالی
-            </button>
+            </a>
             <a href="#gfcv-service-settings" class="button button-secondary">تنظیمات پیامک</a>
             <a href="<?php echo esc_url($add_url); ?>" class="button button-primary gfcv-dashboard-create">
                 <span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
@@ -54,6 +54,13 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
         </div>
     </section>
 
+    <?php if (GFCV_Kavenegar::get_key() === '') : ?>
+        <div class="notice notice-warning inline">
+            <p><strong>سرویس پیامک آماده نیست.</strong> کلید API سراسری کاوه‌نگار ثبت نشده است؛
+            ارسال پیامک تستی و دریافت گزارش تا ثبت آن امکان‌پذیر نیست.
+            <a href="#gfcv-service-settings">تنظیم کلید API</a></p>
+        </div>
+    <?php endif; ?>
     <?php if (isset($_GET['deleted'])) : ?>
         <div class="notice notice-success is-dismissible"><p>نمای سفارشی با موفقیت حذف شد.</p></div>
     <?php endif; ?>
@@ -89,11 +96,13 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
         </div>
     </section>
 
-    <section class="gfcv-dashboard-outbox" id="gfcv-dashboard-outbox" hidden aria-labelledby="gfcv-outbox-heading">
+    <details class="gfcv-dashboard-outbox" id="gfcv-dashboard-outbox" aria-labelledby="gfcv-outbox-heading">
+        <summary class="gfcv-outbox-summary">گزارش پیامک‌های ارسالی <span class="gfcv-outbox-summary-hint">برای بازکردن گزارش کلیک کنید</span></summary>
         <div class="gfcv-dashboard-outbox-head">
             <div>
                 <h2 id="gfcv-outbox-heading">گزارش پیامک‌های ارسالی کاوه‌نگار</h2>
                 <p>گزارش از حساب کاوه‌نگار خوانده می‌شود و ممکن است شامل پیامک‌هایی خارج از این افزونه نیز باشد.</p>
+                <p>اگر پس از بازکردن گزارش، خطای سرویس رخ دهد، جزئیات قابل‌فهم آن همین‌جا نمایش داده می‌شود.</p>
             </div>
             <button type="button" id="gfcv-close-outbox" class="button button-secondary" aria-label="بستن گزارش پیامک‌ها">بستن</button>
         </div>
@@ -134,7 +143,7 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
             <span id="gfcv-outbox-page-label" aria-live="polite"></span>
             <button type="button" class="button button-secondary" id="gfcv-outbox-next">صفحه بعد</button>
         </div>
-    </section>
+    </details>
 
     <section class="gfcv-dashboard-list-panel" aria-labelledby="gfcv-views-heading">
         <div class="gfcv-dashboard-panel-head">

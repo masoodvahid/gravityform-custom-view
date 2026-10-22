@@ -76,11 +76,11 @@ $(function() {
         $tbody=$('#gfcv-outbox-rows'),$pages=$('#gfcv-outbox-pagination');
     var page=1,pageSize=15,logs=[];
     function toggleOutbox(show){
-        $outbox.prop('hidden',!show);
+        $outbox.prop('open', !!show);
         $button.attr('aria-expanded',show?'true':'false');
-        if(show){
-            $outbox[0].scrollIntoView({behavior:'smooth',block:'start'});
-        }else{
+        if (show) {
+            $outbox[0].scrollIntoView({block:'start',behavior:'smooth'});
+        } else {
             $button.trigger('focus');
         }
     }
@@ -121,17 +121,28 @@ $(function() {
                 $status.text(resp&&resp.data&&resp.data.message||'گزارش در دسترس نیست.');return;
             }
             logs=Array.isArray(resp.data.rows)?resp.data.rows:[];page=1;
+            outboxLoaded = true;
             renderPage();
             $status.text((resp.data.description||'')+' — '+logs.length+' مورد دریافت شد.'+
                 (resp.data.limited?' حداکثر ۳۰۰۰ مورد نمایش داده می‌شود.':'')+
                 (!logs.length?' موردی برای نمایش وجود ندارد.':''));
         }).fail(function(xhr){
             logs=[];renderPage();
-            $status.text(xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message||
-                'خطا در ارتباط با سرویس پیامک. اتصال سرور به کاوه‌نگار را بررسی کنید.');
+            var message=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;
+            $status.text(message||('خطا در دریافت گزارش (HTTP '+xhr.status+'). اتصال سرور و کلید API را بررسی کنید.'));
         }).always(function(){ $fetch.prop('disabled',false); });
     }
-    $button.on('click',function(){toggleOutbox(!$outbox.prop('hidden'));if(!$outbox.prop('hidden')&&!logs.length)fetchOutbox();});
+    var outboxLoaded = false;
+    $button.on('click',function(e){
+        e.preventDefault();
+        toggleOutbox(true);
+        if (!outboxLoaded) { fetchOutbox(); }
+    });
+    $outbox.on('toggle',function(){
+        var opened = $outbox.prop('open');
+        $button.attr('aria-expanded',opened?'true':'false');
+        if (opened && !outboxLoaded) { fetchOutbox(); }
+    });
     $('#gfcv-close-outbox').on('click',function(){toggleOutbox(false);});
     $('#gfcv-outbox-filters').on('submit',function(e){e.preventDefault();fetchOutbox();});
     $('#gfcv-outbox-mode').on('change',function(){
@@ -139,8 +150,15 @@ $(function() {
     });
     $('#gfcv-outbox-prev').on('click',function(){page--;renderPage();});
     $('#gfcv-outbox-next').on('click',function(){page++;renderPage();});
-    if(window.location.hash==='#gfcv-service-settings') {
-        $('#gfcv-service-settings').prop('open',true);
+    function openServiceSettings(){
+        if(window.location.hash==='#gfcv-service-settings') {
+            $('#gfcv-service-settings').prop('open',true);
+        }
     }
+    $page.on('click','a[href="#gfcv-service-settings"]',function(){
+        $('#gfcv-service-settings').prop('open',true);
+    });
+    $(window).on('hashchange',openServiceSettings);
+    openServiceSettings();
 });
 })(jQuery);

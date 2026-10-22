@@ -101,7 +101,13 @@
                     $preview.append($details);
                     $preview.append($('<div class="gfcv-sms-send-status" aria-live="polite"/>'));
                     $body.empty().append($preview);
-                    $send.show().prop('disabled',!data.recipient||!data.template);
+                    if (!data.send_enabled) {
+                        $preview.append($('<p class="gfcv-sms-note"/>')
+                            .text('کلید API سراسری کاوه‌نگار هنوز تنظیم نشده است؛ به تنظیمات افزونه مراجعه کنید.'));
+                    }
+                    $send.toggle(!!data.send_enabled).prop(
+                        'disabled',!data.send_enabled||!data.recipient||!data.template
+                    );
                 },
                 error: function() {
                     modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
@@ -124,10 +130,16 @@
                 entry_id:entryId,view_id:$('.gfcv-container').data('view-id'),
                 type:type,nonce:gfcv_vars.nonce
             }).done(function(resp){
-                $status.text(resp&&resp.data&&resp.data.message||'پاسخ سرویس پیامک نامشخص است.');
+                var message=resp&&resp.data&&resp.data.message||'پاسخ سرویس پیامک نامشخص است.';
+                if (resp&&resp.success) {
+                    $status.text(message).attr('data-send-status','accepted');
+                } else {
+                    $status.text(message).attr('data-send-status','failed');
+                }
             }).fail(function(xhr){
-                $status.text(xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message||
-                    'ارسال ناموفق بود؛ ارتباط با سرور را بررسی کنید.');
+                var message=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message||
+                    'ارسال ناموفق بود (HTTP '+xhr.status+'). اتصال سرور به کاوه‌نگار را بررسی کنید.';
+                $status.text(message).attr('data-send-status','failed');
             }).always(function(){ $button.prop('disabled',false); });
         });
 

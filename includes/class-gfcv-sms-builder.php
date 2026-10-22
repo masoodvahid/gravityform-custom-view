@@ -95,25 +95,49 @@ class GFCV_SMS_Builder {
         }
 
         $mobile = $mobile_input !== '' ? self::normalize_mobile($mobile_input) : '';
-        $ticket = '';
-        $saved_pattern = $view ? (string)($type === 'admin' ? $view->admin_sms_pattern : $view->user_sms_pattern) : '';
-        $saved_body = $view ? (string)($type === 'admin' ? $view->admin_sms_template_text : $view->user_sms_template_text) : '';
         if ($mobile_input !== '' && !$mobile) {
             wp_send_json_error(array('message'=>'شماره موبایل تستی معتبر نیست؛ نمونه: 09123456789.'),400);
         }
-        if ($view && $mobile && $pattern === $saved_pattern && $body === $saved_body && GFCV_Kavenegar::get_key() !== '') {
+        $ticket = '';
+        $reason = '';
+        if (!$mobile) {
+            $reason = 'برای ارسال واقعی، شماره موبایل تستی وارد کنید.';
+        } elseif (GFCV_Kavenegar::get_key() === '') {
+            $reason = 'کلید API سراسری کاوه‌نگار ثبت نشده است. آن را در صفحه اصلی افزونه تنظیم کنید.';
+        } else {
+            foreach ($result as $token_key => $token_value) {
+                // Do not send unexpanded GF field placeholders.
+                if (preg_match('/\\{(?:entry_id|[0-9]+(?:\\.[0-9]+)?)\\}/u', $token_value)) {
+                    $reason = 'مقدار ' . $token_key . ' هنوز به یک مقدار واقعی تبدیل نشده است.';
+                    break;
+                }
+            }
+        }
+
+        if ($reason === '' && $mobile) {
+            // One-use server-side snapshot: allowing tests before saving is safe,
+            // because ONLY an administrator can mint this ticket. Values and
+            // recipient cannot be changed after review and confirmation.
             $ticket = wp_generate_password(30, false, false);
             set_transient('gfcv_sms_preview_' . get_current_user_id() . '_' . $ticket, array(
-                'view_id'=>$view_id,'form_id'=>$form_id,'type'=>$type,'mobile'=>$mobile,
+                'view_id'=>$view_id,
+                'form_id'=>$form_id,
+                'type'=>$type,
+                'mobile'=>$mobile,
+                'entry_id'=>$has_entry ? absint(rgar($entry, 'id')) : 0,
                 'params'=>array_merge(array('template'=>$template),$result),
-                'pattern_hash'=>hash('sha256',$saved_pattern . "\n" . $saved_body)
+                'issued_at'=>time()
             ), 5 * MINUTE_IN_SECONDS);
         }
         wp_send_json_success(array(
-            'preview'=>$preview, 'source'=>$has_entry ? 'آخرین رکورد: ' . absint($entry['id']) : 'بدون رکورد؛ مقادیر نمونه را تنظیم کنید',
+            'preview'=>$preview,
+            'source'=>$has_entry ? 'آخرین رکورد: ' . absint($entry['id']) : 'بدون رکورد؛ مقادیر ثابت وارد کنید',
             'params'=>array_merge(array('template'=>$template),$result),
-            'can_send'=>(bool)$ticket,'ticket'=>$ticket,
-            'message'=>$ticket ? 'پیش‌نمایش آماده تأیید ارسال است.' : 'برای تست واقعی، نما و تغییرات پترن را ذخیره کنید و شماره تستی وارد کنید.'
+            'can_send'=>(bool)$ticket,
+            'ticket'=>$ticket,
+            'message'=>$ticket
+                ? 'ارسال آزمایشی آماده است. برای ارسال واقعی، دکمه تأیید نهایی را بزنید.'
+                : $reason
         ));
     }
 
@@ -134,13 +158,25 @@ class GFCV_SMS_Builder {
         if (get_transient($limit)) {
             wp_send_json_error(array('message'=>'حداقل یک دقیقه تا ارسال آزمایشی بعدی فاصله بگذارید.'),429);
         }
-        $view = GFCV_DB::get_instance()->get_view((int)$ticket_data['view_id']);
-        if (!$view || (int)$view->form_id !== (int)$ticket_data['form_id'] || GFCV_Kavenegar::get_key() === '') {
-            wp_send_json_error(array('message'=>'نمای ذخیره‌شده یا کلید API معتبر نیست.'),400);
+        // The test pattern may be new or still unsaved. We only trust the
+        // reviewed one-time server snapshot, not fresh client-side parameters.
+        $test_form = class_exists('GFAPI')
+            ? GFAPI::get_form((int)$ticket_data['form_id']) : false;
+        if (!$test_form || is_wp_error($test_form)) {
+            wp_send_json_error(array('message'=>'فرم تست دیگر در دسترس نیست.'),400);
         }
-        $saved_pattern = ($ticket_data['type'] === 'admin') ? $view->admin_sms_pattern : $view->user_sms_pattern;
-        if (!hash_equals($ticket_data['pattern_hash'], hash('sha256',(string)$saved_pattern . "\n" . (string)(($ticket_data['type'] === 'admin') ? $view->admin_sms_template_text : $view->user_sms_template_text)))) {
-            wp_send_json_error(array('message'=>'پترن از زمان پیش‌نمایش تغییر کرده است؛ دوباره بررسی کنید.'),400);
+        if (!empty($ticket_data['view_id'])) {
+            $view = GFCV_DB::get_instance()->get_view((int)$ticket_data['view_id']);
+            if (!$view || (int)$view->form_id !== (int)$ticket_data['form_id']) {
+                wp_send_json_error(array('message'=>'نمای انتخاب‌شده دیگر معتبر نیست.'),400);
+            }
+        }
+        if (GFCV_Kavenegar::get_key() === '') {
+            wp_send_json_error(array('message'=>'کلید API سراسری تنظیم نشده است.'),400);
+        }
+        $params = (array)$ticket_data['params'];
+        if (empty($params['template']) || !isset($params['token']) || trim((string)$params['token']) === '') {
+            wp_send_json_error(array('message'=>'نام پترن یا مقدار اصلی پیامک مشخص نیست.'),400);
         }
         set_transient($limit, 1, MINUTE_IN_SECONDS);
         $result = GFCV_Shortcode::get_instance()->send_sms_test_lookup(
@@ -149,6 +185,10 @@ class GFCV_SMS_Builder {
         if (empty($result['success'])) {
             wp_send_json_error(array('message'=>$result['message'] ?? 'ارسال ناموفق بود.'),502);
         }
-        wp_send_json_success(array('message'=>'پیامک آزمایشی به ' . $ticket_data['mobile'] . ' ارسال شد.'));
+        wp_send_json_success(array(
+            'message'=>'شماره مقصد: ' . $ticket_data['mobile'] . ' — ' .
+                (string)($result['message'] ?? 'درخواست ارسال توسط کاوه‌نگار ثبت شد.'),
+            'message_id'=>(string)($result['message_id'] ?? '')
+        ));
     }
 }
