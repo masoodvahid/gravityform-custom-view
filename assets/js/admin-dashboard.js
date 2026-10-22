@@ -75,14 +75,41 @@ $(function() {
         $status=$('#gfcv-outbox-status'),$table=$('#gfcv-outbox-table'),
         $tbody=$('#gfcv-outbox-rows'),$pages=$('#gfcv-outbox-pagination');
     var page=1,pageSize=15,logs=[];
-    function toggleOutbox(show){
-        $outbox.prop('open', !!show);
-        $button.attr('aria-expanded',show?'true':'false');
-        if (show) {
-            $outbox[0].scrollIntoView({block:'start',behavior:'smooth'});
+    var outboxLoaded=false, outboxLoading=false;
+    var outboxDialog=$outbox[0], returnFocus=null;
+
+    function openOutbox() {
+        if (!outboxDialog || outboxDialog.open) { return; }
+        returnFocus=document.activeElement;
+        if (typeof outboxDialog.showModal === 'function') {
+            outboxDialog.showModal(); // native top-layer + focus trap + Escape
+        } else {
+            $outbox.attr('open','open').addClass('gfcv-outbox-fallback-open');
+            $('body').addClass('gfcv-outbox-fallback-active');
+        }
+        $button.attr('aria-expanded','true');
+        $('#gfcv-close-outbox').trigger('focus');
+        // Each new opening should show the latest account records.
+        fetchOutbox();
+    }
+    function closeOutbox() {
+        if (!outboxDialog || !outboxDialog.open) { return; }
+        if (typeof outboxDialog.close === 'function') {
+            outboxDialog.close();
+        } else {
+            $outbox.removeAttr('open').removeClass('gfcv-outbox-fallback-open');
+            restoreFocus();
+        }
+    }
+    function restoreFocus() {
+        $('body').removeClass('gfcv-outbox-fallback-active');
+        $button.attr('aria-expanded','false');
+        if (returnFocus && typeof returnFocus.focus === 'function') {
+            returnFocus.focus();
         } else {
             $button.trigger('focus');
         }
+        returnFocus=null;
     }
     function safeCell(text,cls){
         return $('<td/>').addClass(cls||'').text(text===null||text===undefined||text===''?'—':text);
@@ -105,11 +132,13 @@ $(function() {
         $('#gfcv-outbox-next').prop('disabled',page>=maxPages);
     }
     function fetchOutbox(){
+        if (outboxLoading) { return; }
         var config=window.gfcvDashboardData||{};
         if(!config.nonce){$status.text('کلید امنیتی گزارش در دسترس نیست.');return;}
         var mode=$('#gfcv-outbox-mode').val();
         var from=$('#gfcv-outbox-from').val(),to=$('#gfcv-outbox-to').val();
         if(mode==='range'&&(!from||!to)){ $status.text('تاریخ شروع و پایان را وارد کنید.');return;}
+        outboxLoading=true;
         var $fetch=$('#gfcv-fetch-outbox').prop('disabled',true);
         $status.text('در حال دریافت گزارش از کاوه‌نگار...');
         $.post(config.ajaxUrl||ajaxurl,{
@@ -130,20 +159,37 @@ $(function() {
             logs=[];renderPage();
             var message=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;
             $status.text(message||('خطا در دریافت گزارش (HTTP '+xhr.status+'). اتصال سرور و کلید API را بررسی کنید.'));
-        }).always(function(){ $fetch.prop('disabled',false); });
+        }).always(function(){ outboxLoading=false; $fetch.prop('disabled',false); });
     }
-    var outboxLoaded = false;
-    $button.on('click',function(e){
-        e.preventDefault();
-        toggleOutbox(true);
-        if (!outboxLoaded) { fetchOutbox(); }
+    $button.on('click',function(event){
+        event.preventDefault();
+        openOutbox();
     });
-    $outbox.on('toggle',function(){
-        var opened = $outbox.prop('open');
-        $button.attr('aria-expanded',opened?'true':'false');
-        if (opened && !outboxLoaded) { fetchOutbox(); }
+    $('#gfcv-close-outbox').on('click',closeOutbox);
+    $outbox.on('close',restoreFocus);
+    // Clicking on the native dialog backdrop closes it; inside clicks don't.
+    $outbox.on('click',function(event){
+        if (event.target === outboxDialog) { closeOutbox(); }
     });
-    $('#gfcv-close-outbox').on('click',function(){toggleOutbox(false);});
+    // Fallback for browsers without native <dialog>. Native dialogs already
+    // handle Escape and keyboard focus containment.
+    $(document).on('keydown.gfcvOutbox',function(event){
+        if (!outboxDialog || !outboxDialog.open ||
+            typeof outboxDialog.showModal === 'function') { return; }
+        if (event.key === 'Escape') {
+            event.preventDefault();closeOutbox();
+        } else if (event.key === 'Tab') {
+            var $focusable=$outbox.find('button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href]')
+                .filter(':visible');
+            if (!$focusable.length) { event.preventDefault();return; }
+            var first=$focusable[0],last=$focusable[$focusable.length-1];
+            if (event.shiftKey && document.activeElement===first) {
+                event.preventDefault();last.focus();
+            } else if (!event.shiftKey && document.activeElement===last) {
+                event.preventDefault();first.focus();
+            }
+        }
+    });
     $('#gfcv-outbox-filters').on('submit',function(e){e.preventDefault();fetchOutbox();});
     $('#gfcv-outbox-mode').on('change',function(){
         $('.gfcv-outbox-range-field').prop('hidden',$(this).val()!=='range');
