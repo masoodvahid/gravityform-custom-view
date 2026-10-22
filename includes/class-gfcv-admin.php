@@ -174,6 +174,26 @@ class GFCV_Admin {
         
         $action = sanitize_text_field(wp_unslash($_POST['gfcv_action']));
 
+        // Kavenegar credentials are shared by all custom views.
+        if ('save_kavenegar_settings' === $action) {
+            $provided = isset($_POST['gfcv_kavenegar_key'])
+                ? trim(sanitize_text_field(wp_unslash($_POST['gfcv_kavenegar_key']))) : '';
+            $clear = !empty($_POST['gfcv_clear_kavenegar_key']);
+            if ($clear) {
+                delete_option(GFCV_Kavenegar::OPTION_KEY);
+                update_option(GFCV_Kavenegar::MIGRATION_KEY, 'manual', false);
+            } elseif ($provided !== '') {
+                if (!preg_match('/^[A-Za-z0-9_-]{10,255}$/D', $provided)) {
+                    wp_safe_redirect(admin_url('admin.php?page=gf_custom_view&api_error=1#gfcv-service-settings'));
+                    exit;
+                }
+                update_option(GFCV_Kavenegar::OPTION_KEY, $provided, false);
+                update_option(GFCV_Kavenegar::MIGRATION_KEY, 'manual', false);
+            }
+            wp_safe_redirect(admin_url('admin.php?page=gf_custom_view&api_updated=1#gfcv-service-settings'));
+            exit;
+        }
+
         // Store regular and bold font sources separately. Use a neutral
         // internal family alias so this setting works with any licensed font.
         // Retain the old single IranYekan URL as a one-time regular fallback.
@@ -234,7 +254,6 @@ class GFCV_Admin {
                 'user_sms_pattern' => sanitize_textarea_field(wp_unslash($_POST['user_sms_pattern'] ?? '')),
                 'admin_sms_template_text' => sanitize_textarea_field(wp_unslash($_POST['admin_sms_template_text'] ?? '')),
                 'user_sms_template_text' => sanitize_textarea_field(wp_unslash($_POST['user_sms_template_text'] ?? '')),
-                'kavenegar_api_key' => sanitize_text_field($_POST['kavenegar_api_key']),
                 'send_to_api' => isset($_POST['send_to_api']) ? 1 : 0,
                 'send_to_details' => wp_kses_post($_POST['send_to_details']),
                 'details_view_html' => wp_kses_post($_POST['details_view_html']),
