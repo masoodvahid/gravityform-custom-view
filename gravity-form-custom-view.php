@@ -3,7 +3,7 @@
  * Plugin Name: نمایش رکوردهای گرویتی فرم با تعیین سطح دسترسی
  * Description: ایجاد لیست قابل مدیریت در گرویتی فرم با توجه به سطح دسترسی کاربران
  * Plugin URI: https://rahkar-digital.ir
- * Version: 1.5.9
+ * Version: 1.5.10
  * Update URI: https://github.com/masoodvahid/gravityform-custom-view
  * Author: مسعود وحید
  * Author URI: https://rahkar-digital.ir
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 define('GFCV_PLUGIN_FILE', __FILE__);
 define('GFCV_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('GFCV_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('GFCV_PLUGIN_VERSION', '1.5.9');
+define('GFCV_PLUGIN_VERSION', '1.5.10');
 
 // Check if Gravity Forms is active
 add_action('admin_init', 'gfcv_check_gravity_forms');
@@ -42,6 +42,7 @@ require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-db.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-admin.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-shortcode.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-sms-builder.php';
+require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-kavenegar.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-conditional-details.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-github-updater.php';
 GFCV_GitHub_Updater::init();
@@ -51,6 +52,9 @@ function gfcv_init() {
     // Initialize database
     GFCV_DB::maybe_upgrade();
     GFCV_DB::get_instance();
+    // Migrate a single legacy per-view credential without changing old view records.
+    GFCV_Kavenegar::migrate_legacy_keys();
+    GFCV_Kavenegar::init();
     
     // Initialize admin
     GFCV_Admin::get_instance();

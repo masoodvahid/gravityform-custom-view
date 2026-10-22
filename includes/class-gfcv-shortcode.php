@@ -724,7 +724,7 @@ class GFCV_Shortcode {
             (empty($view->user_access_ids) || !$this->user_has_access((string)$view->user_access_ids)))) {
             wp_send_json_error(array('message'=>'اجازه ارسال پیامک از این نما را ندارید.'),403);
         }
-        if (empty($view->kavenegar_api_key) || !class_exists('GFAPI')) {
+        if (GFCV_Kavenegar::get_key() === '' || !class_exists('GFAPI')) {
             wp_send_json_error(array('message'=>'کلید کاوه‌نگار یا Gravity Forms در دسترس نیست.'),400);
         }
         $entry = GFAPI::get_entry($entry_id);
@@ -757,7 +757,7 @@ class GFCV_Shortcode {
         set_transient($lock,1,MINUTE_IN_SECONDS);
         $out = array();
         foreach ($numbers as $n) {
-            $result = $this->send_kavenegar_lookup($view->kavenegar_api_key,$n,$params);
+            $result = $this->send_kavenegar_lookup(GFCV_Kavenegar::get_key(),$n,$params);
             $out[] = array('number'=>$n,'success'=>!empty($result['success']),'message'=>$result['message']??'');
         }
         $success = count(array_filter($out,function($v){return $v['success'];})) === count($out);

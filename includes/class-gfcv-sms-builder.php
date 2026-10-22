@@ -101,7 +101,7 @@ class GFCV_SMS_Builder {
         if ($mobile_input !== '' && !$mobile) {
             wp_send_json_error(array('message'=>'شماره موبایل تستی معتبر نیست؛ نمونه: 09123456789.'),400);
         }
-        if ($view && $mobile && $pattern === $saved_pattern && $body === $saved_body && !empty($view->kavenegar_api_key)) {
+        if ($view && $mobile && $pattern === $saved_pattern && $body === $saved_body && GFCV_Kavenegar::get_key() !== '') {
             $ticket = wp_generate_password(30, false, false);
             set_transient('gfcv_sms_preview_' . get_current_user_id() . '_' . $ticket, array(
                 'view_id'=>$view_id,'form_id'=>$form_id,'type'=>$type,'mobile'=>$mobile,
@@ -135,7 +135,7 @@ class GFCV_SMS_Builder {
             wp_send_json_error(array('message'=>'حداقل یک دقیقه تا ارسال آزمایشی بعدی فاصله بگذارید.'),429);
         }
         $view = GFCV_DB::get_instance()->get_view((int)$ticket_data['view_id']);
-        if (!$view || (int)$view->form_id !== (int)$ticket_data['form_id'] || !$view->kavenegar_api_key) {
+        if (!$view || (int)$view->form_id !== (int)$ticket_data['form_id'] || GFCV_Kavenegar::get_key() === '') {
             wp_send_json_error(array('message'=>'نمای ذخیره‌شده یا کلید API معتبر نیست.'),400);
         }
         $saved_pattern = ($ticket_data['type'] === 'admin') ? $view->admin_sms_pattern : $view->user_sms_pattern;
@@ -144,7 +144,7 @@ class GFCV_SMS_Builder {
         }
         set_transient($limit, 1, MINUTE_IN_SECONDS);
         $result = GFCV_Shortcode::get_instance()->send_sms_test_lookup(
-            $view->kavenegar_api_key, $ticket_data['mobile'], $ticket_data['params']
+            GFCV_Kavenegar::get_key(), $ticket_data['mobile'], $ticket_data['params']
         );
         if (empty($result['success'])) {
             wp_send_json_error(array('message'=>$result['message'] ?? 'ارسال ناموفق بود.'),502);

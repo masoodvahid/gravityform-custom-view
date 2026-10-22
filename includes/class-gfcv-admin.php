@@ -98,6 +98,20 @@ class GFCV_Admin {
             true
         );
         wp_localize_script('gfcv-admin-scripts', 'gfcvAdminData', array('smsNonce' => wp_create_nonce('gfcv_test_sms'), 'builderNonce' => wp_create_nonce('gfcv_sms_builder')));
+        // List overview is a separate, lightweight interaction bundle.
+        if (!isset($_GET['action']) || !in_array(sanitize_key(wp_unslash($_GET['action'])), array('add', 'edit'), true)) {
+            wp_enqueue_script(
+                'gfcv-dashboard',
+                GFCV_PLUGIN_URL . 'assets/js/admin-dashboard.js',
+                array('jquery'),
+                GFCV_PLUGIN_VERSION,
+                true
+            );
+            wp_localize_script('gfcv-dashboard', 'gfcvDashboardData', array(
+                'nonce'=>wp_create_nonce('gfcv_outbox'),
+                'ajaxUrl'=>admin_url('admin-ajax.php')
+            ));
+        }
         wp_enqueue_script(
             'gfcv-sms-builder',
             GFCV_PLUGIN_URL . 'assets/js/sms-builder.js',
@@ -174,6 +188,26 @@ class GFCV_Admin {
         
         $action = sanitize_text_field(wp_unslash($_POST['gfcv_action']));
 
+        // Kavenegar credentials are shared by all custom views.
+        if ('save_kavenegar_settings' === $action) {
+            $provided = isset($_POST['gfcv_kavenegar_key'])
+                ? trim(sanitize_text_field(wp_unslash($_POST['gfcv_kavenegar_key']))) : '';
+            $clear = !empty($_POST['gfcv_clear_kavenegar_key']);
+            if ($clear) {
+                delete_option(GFCV_Kavenegar::OPTION_KEY);
+                update_option(GFCV_Kavenegar::MIGRATION_KEY, 'manual', false);
+            } elseif ($provided !== '') {
+                if (!preg_match('/^[A-Za-z0-9_-]{10,255}$/D', $provided)) {
+                    wp_safe_redirect(admin_url('admin.php?page=gf_custom_view&api_error=1#gfcv-service-settings'));
+                    exit;
+                }
+                update_option(GFCV_Kavenegar::OPTION_KEY, $provided, false);
+                update_option(GFCV_Kavenegar::MIGRATION_KEY, 'manual', false);
+            }
+            wp_safe_redirect(admin_url('admin.php?page=gf_custom_view&api_updated=1#gfcv-service-settings'));
+            exit;
+        }
+
         // Store regular and bold font sources separately. Use a neutral
         // internal family alias so this setting works with any licensed font.
         // Retain the old single IranYekan URL as a one-time regular fallback.
@@ -234,7 +268,6 @@ class GFCV_Admin {
                 'user_sms_pattern' => sanitize_textarea_field(wp_unslash($_POST['user_sms_pattern'] ?? '')),
                 'admin_sms_template_text' => sanitize_textarea_field(wp_unslash($_POST['admin_sms_template_text'] ?? '')),
                 'user_sms_template_text' => sanitize_textarea_field(wp_unslash($_POST['user_sms_template_text'] ?? '')),
-                'kavenegar_api_key' => sanitize_text_field($_POST['kavenegar_api_key']),
                 'send_to_api' => isset($_POST['send_to_api']) ? 1 : 0,
                 'send_to_details' => wp_kses_post($_POST['send_to_details']),
                 'details_view_html' => wp_kses_post($_POST['details_view_html']),
@@ -393,7 +426,7 @@ class GFCV_Admin {
         $entries=GFAPI::get_entries($view->form_id,array('status'=>'active'),array('key'=>'id','direction'=>'DESC'),array('offset'=>0,'page_size'=>1));
         if (is_wp_error($entries) || !$entries) {wp_send_json_error(array('message'=>'رکورد نمونه برای ساخت پیامک وجود ندارد.'),400);}
         $form=GFAPI::get_form($view->form_id);
-        if (!$form || !$view->admin_sms_pattern || !$view->kavenegar_api_key) {wp_send_json_error(array('message'=>'الگوی مدیر یا کلید API تنظیم نشده است.'),400);}
+        if (!$form || !$view->admin_sms_pattern || !GFCV_Kavenegar::get_key()) {wp_send_json_error(array('message'=>'الگوی مدیر یا کلید API تنظیم نشده است.'),400);}
         return array($view,$numbers,$entries[0],$form);
     }
 
@@ -419,7 +452,7 @@ class GFCV_Admin {
         set_transient($key,1,MINUTE_IN_SECONDS);
         $results=array();
         foreach ($numbers as $number) {
-            $result=$shortcode->send_sms_test_lookup($view->kavenegar_api_key,$number,$params);
+            $result=$shortcode->send_sms_test_lookup(GFCV_Kavenegar::get_key(),$number,$params);
             $results[]=array('number'=>$number,'success'=>!empty($result['success']),'message'=>$result['message'] ?? '');
         }
         wp_send_json_success(array('results'=>$results));
