@@ -105,7 +105,7 @@ class GFCV_Bulk_User_SMS {
                 $skipped[]=array('entry_id'=>$entry_id,'reason'=>'رکورد معتبر یا فعال نیست.');
                 continue;
             }
-            $mobile=self::mobile(rgar($entry,(string)$view->user_mobile_field_id));
+            $mobile=self::mobile(GFCV_Shortcode::entry_user_mobile($entry, $view));
             if ($mobile==='') {
                 $skipped[]=array('entry_id'=>$entry_id,'reason'=>'شماره موبایل معتبر ندارد.');
                 continue;
