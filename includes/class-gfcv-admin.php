@@ -49,6 +49,7 @@ class GFCV_Admin {
         add_action('wp_ajax_gfcv_get_form_fields', array($this, 'ajax_get_form_fields'));
         add_action('wp_ajax_gfcv_test_sms', array($this, 'ajax_test_sms'));
         add_action('wp_ajax_gfcv_preview_sms', array($this, 'ajax_preview_sms'));
+        add_action('wp_ajax_gfcv_sms_builder_sample', array($this, 'ajax_sms_builder_sample'));
     }
 
     /**
@@ -96,7 +97,7 @@ class GFCV_Admin {
             GFCV_PLUGIN_VERSION,
             true
         );
-        wp_localize_script('gfcv-admin-scripts', 'gfcvAdminData', array('smsNonce' => wp_create_nonce('gfcv_test_sms')));
+        wp_localize_script('gfcv-admin-scripts', 'gfcvAdminData', array('smsNonce' => wp_create_nonce('gfcv_test_sms'), 'builderNonce' => wp_create_nonce('gfcv_sms_builder')));
     }
 
     /**
@@ -161,7 +162,7 @@ class GFCV_Admin {
         
         // Verify nonce
         if (!isset($_POST['gfcv_nonce']) || !wp_verify_nonce($_POST['gfcv_nonce'], 'gfcv_save_view')) {
-            wp_die(__('Security check failed', 'gravity-form-custom-view'));
+            wp_die(__('بررسی امنیتی ناموفق بود.', 'gravity-form-custom-view'));
         }
         
         $action = sanitize_text_field(wp_unslash($_POST['gfcv_action']));
@@ -222,8 +223,10 @@ class GFCV_Admin {
                 'field_ids' => implode(',', array_map('absint', array_filter(explode(',', sanitize_text_field(wp_unslash($_POST['field_ids'] ?? '')))))),
                 'show_all_options' => isset($_POST['show_all_options']) ? 1 : 0,
                 'respect_conditional_logic' => isset($_POST['respect_conditional_logic']) ? 1 : 0,
-                'admin_sms_pattern' => wp_kses_post($_POST['admin_sms_pattern']),
-                'user_sms_pattern' => wp_kses_post($_POST['user_sms_pattern']),
+                'admin_sms_pattern' => sanitize_textarea_field(wp_unslash($_POST['admin_sms_pattern'] ?? '')),
+                'user_sms_pattern' => sanitize_textarea_field(wp_unslash($_POST['user_sms_pattern'] ?? '')),
+                'admin_sms_template_text' => sanitize_textarea_field(wp_unslash($_POST['admin_sms_template_text'] ?? '')),
+                'user_sms_template_text' => sanitize_textarea_field(wp_unslash($_POST['user_sms_template_text'] ?? '')),
                 'kavenegar_api_key' => sanitize_text_field($_POST['kavenegar_api_key']),
                 'send_to_api' => isset($_POST['send_to_api']) ? 1 : 0,
                 'send_to_details' => wp_kses_post($_POST['send_to_details']),
@@ -274,24 +277,24 @@ class GFCV_Admin {
         if (!current_user_can('manage_options')) { wp_send_json_error(array('message' => 'دسترسی غیرمجاز'), 403); }
         // Verify nonce
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'gfcv_save_view')) {
-            wp_send_json_error(array('message' => __('Security check failed', 'gravity-form-custom-view')));
+            wp_send_json_error(array('message' => __('بررسی امنیتی ناموفق بود.', 'gravity-form-custom-view')));
         }
         
         $form_id = isset($_POST['form_id']) ? absint($_POST['form_id']) : 0;
         
         if (!$form_id) {
-            wp_send_json_error(array('message' => __('Invalid form ID', 'gravity-form-custom-view')));
+            wp_send_json_error(array('message' => __('شناسه فرم معتبر نیست.', 'gravity-form-custom-view')));
         }
         
         // Get form fields
         if (!class_exists('GFAPI')) {
-            wp_send_json_error(array('message' => __('Gravity Forms API not available', 'gravity-form-custom-view')));
+            wp_send_json_error(array('message' => __('دسترسی به Gravity Forms ممکن نیست.', 'gravity-form-custom-view')));
         }
         
         $form = GFAPI::get_form($form_id);
         
         if (!$form) {
-            wp_send_json_error(array('message' => __('Form not found', 'gravity-form-custom-view')));
+            wp_send_json_error(array('message' => __('فرم موردنظر یافت نشد.', 'gravity-form-custom-view')));
         }
         
         // Build HTML for field list
@@ -304,7 +307,7 @@ class GFCV_Admin {
                 }
             }
         } else {
-            $html = '<p>' . __('No fields found in this form.', 'gravity-form-custom-view') . '</p>';
+            $html = '<p>' . __('این فرم فیلدی برای نمایش ندارد.', 'gravity-form-custom-view') . '</p>';
         }
         
         // PDF filename selectors support both ordinary fields and Name sub-inputs.
@@ -328,6 +331,48 @@ class GFCV_Admin {
 
         wp_send_json_success(array('pdf_fields' => $pdf_fields, 'html' => $html, 'fields' => array_values(array_map(function($field) {return array('id' => (string)$field->id, 'label' => $field->label);}, array_filter($form['fields'], function($field) {return !$field->displayOnly;})))));
     }
+    /** Preview sample data for the SMS form builder. Access is admin-only. */
+    public function ajax_sms_builder_sample() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message'=>'دسترسی غیرمجاز.'),403);
+        }
+        check_ajax_referer('gfcv_sms_builder','nonce');
+        $form_id = absint($_POST['form_id'] ?? 0);
+        if (!$form_id || !class_exists('GFAPI')) {
+            wp_send_json_error(array('message'=>'ابتدا فرم معتبر انتخاب کنید.'),400);
+        }
+        $form = GFAPI::get_form($form_id);
+        if (!$form || is_wp_error($form)) {
+            wp_send_json_error(array('message'=>'فرم یافت نشد.'),404);
+        }
+        $entries = GFAPI::get_entries($form_id, array('status'=>'active'),
+            array('key'=>'id','direction'=>'DESC'), array('offset'=>0,'page_size'=>1));
+        $entry = (!is_wp_error($entries) && !empty($entries)) ? $entries[0] : array();
+        $values = array();
+        foreach ((array)($form['fields'] ?? array()) as $field) {
+            if (!empty($field->displayOnly)) { continue; }
+            $id = (string)$field->id;
+            $value = rgar($entry, $id);
+            $values[$id] = is_scalar($value) ? sanitize_text_field((string)$value) : '';
+            if (!empty($field->inputs) && is_array($field->inputs)) {
+                $pieces = array();
+                foreach ($field->inputs as $input) {
+                    $input_id = (string)($input['id'] ?? '');
+                    if (!$input_id) { continue; }
+                    $v = rgar($entry, $input_id);
+                    $values[$input_id] = is_scalar($v) ? sanitize_text_field((string)$v) : '';
+                    if ($values[$input_id] !== '') { $pieces[] = $values[$input_id]; }
+                }
+                if (!$values[$id]) { $values[$id] = implode(' ', $pieces); }
+            }
+        }
+        wp_send_json_success(array(
+            'entry_id'=>absint(rgar($entry,'id')),
+            'values'=>$values,
+            'has_entry'=>!empty($entry)
+        ));
+    }
+
     /** Only admins can preview/send a test using persisted credentials. */
     private function sms_test_context() {
         if (!current_user_can('manage_options')) { wp_send_json_error(array('message'=>'دسترسی غیرمجاز'),403); }
