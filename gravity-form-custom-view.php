@@ -3,7 +3,7 @@
  * Plugin Name: نمایش رکوردهای گرویتی فرم با تعیین سطح دسترسی
  * Description: ایجاد لیست قابل مدیریت در گرویتی فرم با توجه به سطح دسترسی کاربران
  * Plugin URI: https://github.com/masoodvahid/gravityform-custom-view
- * Version: 1.6.4
+ * Version: 1.6.5
  * Update URI: https://github.com/masoodvahid/gravityform-custom-view
  * Author: مسعود وحید
  * Author URI: https://github.com/masoodvahid/gravityform-custom-view
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 define('GFCV_PLUGIN_FILE', __FILE__);
 define('GFCV_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('GFCV_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('GFCV_PLUGIN_VERSION', '1.6.4');
+define('GFCV_PLUGIN_VERSION', '1.6.5');
 
 // Check if Gravity Forms is active
 add_action('admin_init', 'gfcv_check_gravity_forms');
