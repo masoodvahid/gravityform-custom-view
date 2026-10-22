@@ -98,6 +98,20 @@ class GFCV_Admin {
             true
         );
         wp_localize_script('gfcv-admin-scripts', 'gfcvAdminData', array('smsNonce' => wp_create_nonce('gfcv_test_sms'), 'builderNonce' => wp_create_nonce('gfcv_sms_builder')));
+        // List overview is a separate, lightweight interaction bundle.
+        if (!isset($_GET['action']) || !in_array(sanitize_key(wp_unslash($_GET['action'])), array('add', 'edit'), true)) {
+            wp_enqueue_script(
+                'gfcv-dashboard',
+                GFCV_PLUGIN_URL . 'assets/js/admin-dashboard.js',
+                array('jquery'),
+                GFCV_PLUGIN_VERSION,
+                true
+            );
+            wp_localize_script('gfcv-dashboard', 'gfcvDashboardData', array(
+                'nonce'=>wp_create_nonce('gfcv_outbox'),
+                'ajaxUrl'=>admin_url('admin-ajax.php')
+            ));
+        }
         wp_enqueue_script(
             'gfcv-sms-builder',
             GFCV_PLUGIN_URL . 'assets/js/sms-builder.js',
