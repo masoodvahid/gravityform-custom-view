@@ -454,7 +454,7 @@
 .gfcv-container .gfcv-col-select input[type=checkbox]{width:17px;height:17px;margin:0;vertical-align:middle;cursor:pointer;accent-color:#13887d}
 body.gfcv-bulk-modal-active{overflow:hidden}
 .gfcv-bulk-modal.gfcv-modal{position:fixed;inset:0;z-index:100001;background:rgba(10,27,40,.58);align-items:center;justify-content:center;padding:15px;overflow:auto}
-.gfcv-bulk-modal[style*="display: block"]{display:flex!important}
+.gfcv-bulk-modal.is-open{display:flex!important}
 .gfcv-bulk-modal .gfcv-bulk-modal-content{width:min(670px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow-y:auto;background:#fff;border:1px solid #e0e7eb;border-radius:14px;box-shadow:0 28px 90px rgba(11,30,44,.26);color:#253e4b;direction:rtl;text-align:right}
 .gfcv-bulk-modal .gfcv-bulk-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:21px 23px 14px;border-bottom:1px solid #e6edf0}
 .gfcv-bulk-modal .gfcv-bulk-modal-header h2{font-size:18px;color:#163b48;margin:0 0 6px;font-weight:800}
