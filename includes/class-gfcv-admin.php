@@ -412,7 +412,7 @@ class GFCV_Admin {
         $entries=GFAPI::get_entries($view->form_id,array('status'=>'active'),array('key'=>'id','direction'=>'DESC'),array('offset'=>0,'page_size'=>1));
         if (is_wp_error($entries) || !$entries) {wp_send_json_error(array('message'=>'رکورد نمونه برای ساخت پیامک وجود ندارد.'),400);}
         $form=GFAPI::get_form($view->form_id);
-        if (!$form || !$view->admin_sms_pattern || !$view->kavenegar_api_key) {wp_send_json_error(array('message'=>'الگوی مدیر یا کلید API تنظیم نشده است.'),400);}
+        if (!$form || !$view->admin_sms_pattern || !GFCV_Kavenegar::get_key()) {wp_send_json_error(array('message'=>'الگوی مدیر یا کلید API تنظیم نشده است.'),400);}
         return array($view,$numbers,$entries[0],$form);
     }
 
@@ -438,7 +438,7 @@ class GFCV_Admin {
         set_transient($key,1,MINUTE_IN_SECONDS);
         $results=array();
         foreach ($numbers as $number) {
-            $result=$shortcode->send_sms_test_lookup($view->kavenegar_api_key,$number,$params);
+            $result=$shortcode->send_sms_test_lookup(GFCV_Kavenegar::get_key(),$number,$params);
             $results[]=array('number'=>$number,'success'=>!empty($result['success']),'message'=>$result['message'] ?? '');
         }
         wp_send_json_success(array('results'=>$results));
