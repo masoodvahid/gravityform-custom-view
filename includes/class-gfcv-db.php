@@ -59,6 +59,8 @@ class GFCV_DB {
             field_ids text NOT NULL,
             admin_sms_pattern text,
             user_sms_pattern text,
+            admin_sms_template_text text,
+            user_sms_template_text text,
             kavenegar_api_key varchar(255),
             send_to_api tinyint(1) DEFAULT 0,
             send_to_details text,
@@ -83,9 +85,9 @@ class GFCV_DB {
      * This is intentionally versioned separately from the plugin's display version.
      */
     public static function maybe_upgrade() {
-        if (get_option('gfcv_db_version') !== '1.5.8') {
+        if (get_option('gfcv_db_version') !== '1.5.9') {
             self::create_tables();
-            update_option('gfcv_db_version', '1.5.8');
+            update_option('gfcv_db_version', '1.5.9');
         }
     }
 
