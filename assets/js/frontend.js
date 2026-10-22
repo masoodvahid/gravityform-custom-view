@@ -58,6 +58,7 @@
             modal.find('.gfcv-modal-title').text(titleText);
             modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.loading_text + '</p>');
             modal.show();
+            modal.find('.gfcv-btn-send-sms').hide();
             
             // Get SMS template via AJAX
             $.ajax({
@@ -71,18 +72,36 @@
                     nonce: gfcv_vars.nonce
                 },
                 success: function(response) {
-                    if (response.success) {
-                        var html = '<div class="gfcv-sms-info">';
-                        if (response.data.recipient) {
-                            html += '<p><strong>' + (type === 'user' ? 'شماره گیرنده:' : 'شماره های مدیران:') + '</strong> ' + response.data.recipient + '</p>';
-                        }
-                        html += '<p><strong>پیام:</strong></p>';
-                        html += '<pre dir="rtl" class="gfcv-sms-message">' + response.data.message + '</pre>';
-                        html += '</div>';
-                        modal.find('.gfcv-modal-body').html(html);
-                    } else {
-                        modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
+                    var $body=modal.find('.gfcv-modal-body');
+                    var $send=modal.find('.gfcv-btn-send-sms');
+                    if (!response || !response.success) {
+                        $body.empty().append($('<p/>').text(
+                            response && response.data && response.data.message || gfcv_vars.error_text
+                        ));
+                        $send.hide();
+                        return;
                     }
+                    var data=response.data;
+                    var $preview=$('<div class="gfcv-sms-info"/>');
+                    $preview.append($('<div class="gfcv-sms-preview-row"/>')
+                        .append($('<strong/>').text('نام پترن: '))
+                        .append($('<code dir="ltr"/>').text(data.template || 'تنظیم نشده')));
+                    $preview.append($('<div class="gfcv-sms-preview-row"/>')
+                        .append($('<strong/>').text(type === 'user' ? 'شماره کاربر: ' : 'شماره‌های مدیران: '))
+                        .append($('<span dir="ltr"/>').text(data.recipient || 'تنظیم نشده')));
+                    $preview.append($('<h3/>').text('پیش‌نمایش پیامک برای همین رکورد'));
+                    $preview.append($('<div class="gfcv-sms-message" dir="rtl"/>').text(data.message || ''));
+                    if (!data.exact_preview) {
+                        $preview.append($('<p class="gfcv-sms-note"/>')
+                            .text('متن کامل پترن در تنظیمات نما وارد نشده است؛ فقط مقادیر متغیرها نمایش داده می‌شوند.'));
+                    }
+                    var $details=$('<details class="gfcv-sms-params"/>')
+                        .append($('<summary/>').text('نمایش مقادیر متغیرهای پیامک'))
+                        .append($('<pre dir="ltr"/>').text(JSON.stringify(data.params || {},null,2)));
+                    $preview.append($details);
+                    $preview.append($('<div class="gfcv-sms-send-status" aria-live="polite"/>'));
+                    $body.empty().append($preview);
+                    $send.show().prop('disabled',!data.recipient||!data.template);
                 },
                 error: function() {
                     modal.find('.gfcv-modal-body').html('<p>' + gfcv_vars.error_text + '</p>');
@@ -90,6 +109,28 @@
             });
         });
         
+        // Sending is separate from preview and requires explicit confirmation.
+        $(document).on('click', '#gfcv-modal-sms .gfcv-btn-send-sms', function() {
+            var modal=$('#gfcv-modal-sms'), $button=$(this);
+            var type=modal.data('sms-type'), entryId=modal.data('entry-id');
+            var recipient=modal.find('.gfcv-sms-preview-row').eq(1).find('span').text();
+            if (!entryId || !recipient) { return; }
+            if (!window.confirm('ارسال واقعی پیامک برای رکورد '+entryId+' به '+recipient+
+                ' را تأیید می‌کنید؟ ارسال می‌تواند هزینه داشته باشد.')) { return; }
+            $button.prop('disabled',true);
+            var $status=modal.find('.gfcv-sms-send-status').text('در حال ارسال پیامک...');
+            $.post(gfcv_vars.ajax_url,{
+                action:'gfcv_send_sms',
+                entry_id:entryId,view_id:$('.gfcv-container').data('view-id'),
+                type:type,nonce:gfcv_vars.nonce
+            }).done(function(resp){
+                $status.text(resp&&resp.data&&resp.data.message||'پاسخ سرویس پیامک نامشخص است.');
+            }).fail(function(xhr){
+                $status.text(xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message||
+                    'ارسال ناموفق بود؛ ارتباط با سرور را بررسی کنید.');
+            }).always(function(){ $button.prop('disabled',false); });
+        });
+
         // API button click
         $('.gfcv-btn-api').on('click', function() {
             var entryId = $(this).closest('tr').data('entry-id');
