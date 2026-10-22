@@ -427,3 +427,18 @@
         page-break-inside: avoid;
     }
 }
+
+
+/* Readable, record-specific SMS preview dialog */
+#gfcv-modal-sms .gfcv-modal-content{max-width:760px}
+#gfcv-modal-sms .gfcv-modal-title{font-size:18px;margin:0 0 13px;color:#193442}
+#gfcv-modal-sms .gfcv-sms-info{direction:rtl;text-align:right}
+#gfcv-modal-sms .gfcv-sms-preview-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:7px 0;font-size:13px}
+#gfcv-modal-sms .gfcv-sms-preview-row code{direction:ltr;white-space:normal;overflow-wrap:anywhere;background:#edf3f6;border-radius:5px;padding:4px 7px}
+#gfcv-modal-sms .gfcv-sms-info h3{font-size:14px;margin:16px 0 8px}
+#gfcv-modal-sms .gfcv-sms-message{direction:rtl;text-align:right;white-space:pre-wrap;overflow-wrap:anywhere;line-height:2.05;background:#f7fafb;color:#193240;padding:17px;border-radius:10px;border:1px solid #e0e9ef}
+#gfcv-modal-sms .gfcv-sms-note{font-size:12px;color:#9b5e13;margin:9px 0}
+#gfcv-modal-sms .gfcv-sms-params{margin:13px 0;border:1px solid #e1e9ee;border-radius:9px;padding:10px}
+#gfcv-modal-sms .gfcv-sms-params summary{cursor:pointer;font-weight:600}
+#gfcv-modal-sms .gfcv-sms-params pre{direction:ltr;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;padding:10px;margin:7px 0}
+#gfcv-modal-sms .gfcv-sms-send-status{padding:9px 0;font-size:13px}
