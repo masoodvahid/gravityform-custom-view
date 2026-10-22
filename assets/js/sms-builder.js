@@ -27,7 +27,7 @@ $(function() {
         });
     }
     function tokenKeys(body) {
-        var keys = [], re = /%(token(?:10|20|2|3)?)(?=%|\b)/g, match;
+        var keys = [], re = /%(token(?:10|20|2|3)?)(?:%|(?=\b))/g, match;
         while ((match = re.exec(body || '')) !== null) {
             if (keys.indexOf(match[1]) === -1) { keys.push(match[1]); }
         }
@@ -69,7 +69,7 @@ $(function() {
         });
         var text;
         if(body.trim()) {
-            text=body.replace(/%(token(?:10|20|2|3)?)(?=%|\b)/g,function(m,key) {
+            text=body.replace(/%(token(?:10|20|2|3)?)(?:%|(?=\b))/g,function(m,key) {
                 return params[key] !== undefined ? params[key] : '['+key+' تنظیم نشده]';
             });
         } else {
