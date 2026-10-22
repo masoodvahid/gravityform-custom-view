@@ -416,7 +416,8 @@ class GFCV_Shortcode {
             'template'=>$template,
             'params'=>array_intersect_key($params,array_flip(array('token','token2','token3','token10','token20'))),
             'exact_preview'=>$exact,
-            'entry_id'=>$entry_id
+            'entry_id'=>$entry_id,
+            'send_enabled'=>GFCV_Kavenegar::get_key() !== ''
         ));
     }
 
@@ -785,7 +786,7 @@ class GFCV_Shortcode {
                     return (string) absint(rgar($entry, 'id'));
                 }
                 $value = rgar($entry, $id);
-                if ((null === $value || '' === trim((string) $value))
+                if ((null === $value || (is_scalar($value) && '' === trim((string) $value)))
                     && false === strpos($id, '.')) {
                     // Compound Name fields / checkbox parents store sub-inputs.
                     foreach ((array) ($form['fields'] ?? array()) as $field) {
@@ -868,32 +869,42 @@ class GFCV_Shortcode {
         // Make the API request
         $response = wp_remote_post($base_url, array(
             'body' => $request_params,
-            'timeout' => 30
+            'timeout' => 30,
+            'redirection' => 0
         ));
         
         // Check for errors
         if (is_wp_error($response)) {
-            return array(
-                'success' => false,
-                'message' => $response->get_error_message()
-            );
+            // The provider key appears in the request URL. Never disclose it.
+            $message = sanitize_text_field(str_replace(
+                (string)$api_key, '[کلید مخفی]', $response->get_error_message()
+            ));
+            return array('success'=>false,'message'=>'خطای ارتباط با کاوه‌نگار: ' . $message);
         }
         
         $body = wp_remote_retrieve_body($response);
         $result = json_decode($body, true);
         
         // Check the response
-        if (isset($result['return']['status']) && $result['return']['status'] == 200) {
+        if (is_array($result) && (int)($result['return']['status'] ?? 0) === 200) {
+            $message_id = isset($result['entries'][0]['messageid'])
+                ? sanitize_text_field((string)$result['entries'][0]['messageid']) : '';
             return array(
-                'success' => true,
-                'message' => __('پیامک با موفقیت ارسال شد', 'gravity-form-custom-view')
-            );
-        } else {
-            $error_message = isset($result['return']['message']) ? $result['return']['message'] : __('خطا در ارسال پیامک', 'gravity-form-custom-view');
-            return array(
-                'success' => false,
-                'message' => $error_message
+                'success'=>true,
+                'message'=>'درخواست ارسال توسط کاوه‌نگار پذیرفته شد.'
+                    . ($message_id !== '' ? ' شناسه پیامک: ' . $message_id : '')
+                    . ' این پاسخ به معنی تحویل قطعی به گوشی نیست.',
+                'message_id'=>$message_id
             );
         }
+        $provider_status = (int)($result['return']['status'] ?? 0);
+        $reason = is_array($result) ? (string)($result['return']['message'] ?? '') : '';
+        $reason = str_replace((string)$api_key,'[کلید مخفی]',$reason);
+        $reason = sanitize_text_field($reason ?: 'پاسخ نامعتبر از کاوه‌نگار');
+        return array(
+            'success'=>false,
+            'message'=>'ارسال ناموفق بود'
+                . ($provider_status ? ' (کد ' . $provider_status . ')' : '') . ': ' . $reason
+        );
     }
 }
