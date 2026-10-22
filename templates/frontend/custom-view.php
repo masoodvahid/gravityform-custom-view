@@ -132,7 +132,7 @@ $column_count = count($visible_field_ids) + 4;
 
 <div class="gfcv-modal" id="gfcv-modal-sms" style="display: none;">
     <div class="gfcv-modal-content">
-        <span class="gfcv-modal-close">&times;</span>
+        <button type="button" class="gfcv-modal-close" aria-label="بستن پنجره">&times;</button>
         <h2 class="gfcv-modal-title"></h2>
         <div class="gfcv-modal-body"></div>
         <div class="gfcv-modal-footer">
@@ -144,7 +144,7 @@ $column_count = count($visible_field_ids) + 4;
 <div class="gfcv-modal" id="gfcv-modal-api" style="display: none;">
     <div class="gfcv-modal-content">
         <span class="gfcv-modal-close">&times;</span>
-        <h2><?php _e('API Data', 'gravity-form-custom-view'); ?></h2>
+        <h2><?php _e('اطلاعات ارتباط با API', 'gravity-form-custom-view'); ?></h2>
         <div class="gfcv-modal-body">
             <pre class="gfcv-json-data"></pre>
         </div>
