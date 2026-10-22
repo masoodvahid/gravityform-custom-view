@@ -339,3 +339,72 @@ body.gfcv-outbox-fallback-active {
         min-width: 52px;
     }
 }
+
+
+/* v1.7.0 — Editing screen: constrained layouts, clean responsive field grids. */
+.gfcv-admin-wrap.gfcv-admin-wrap{width:calc(100% - 20px);max-width:1370px;min-width:0;margin-right:0}
+.gfcv-edit-form.gfcv-edit-form{width:100%;max-width:100%;min-width:0;overflow:hidden;box-sizing:border-box}
+.gfcv-edit-form *{box-sizing:border-box}
+.gfcv-edit-form .form-table{width:100%;table-layout:fixed;margin:0;min-width:0}
+.gfcv-edit-form .form-table>tbody>tr>th{width:172px;max-width:172px;padding:22px 9px;overflow-wrap:anywhere}
+.gfcv-edit-form .form-table>tbody>tr>td{min-width:0;width:auto;padding:20px 12px;overflow-wrap:anywhere}
+.gfcv-edit-form .form-table td>div{min-width:0;max-width:100%}
+.gfcv-edit-form .form-table input:not([type=checkbox]):not([type=radio]):not([type=hidden]),
+.gfcv-edit-form .form-table select,
+.gfcv-edit-form .form-table textarea{max-width:100%;min-width:0}
+.gfcv-edit-form .gfcv-form-control{min-width:0;display:flex;flex-direction:column;gap:7px}
+.gfcv-edit-form .gfcv-form-control>label{font-size:12px;font-weight:700;color:#284455;line-height:1.8}
+.gfcv-edit-form .gfcv-form-control input,
+.gfcv-edit-form .gfcv-form-control select,
+.gfcv-edit-form .gfcv-form-control textarea{width:100%;max-width:100%;min-width:0}
+.gfcv-edit-form .gfcv-form-control .description{margin:0;font-size:11px;line-height:1.75}
+.gfcv-edit-form .gfcv-identity-grid,
+.gfcv-edit-form .gfcv-name-fields-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px;row-gap:12px;align-items:start;width:100%;min-width:0}
+.gfcv-edit-form .gfcv-name-fields-row{margin:14px 0 11px}
+.gfcv-edit-form .gfcv-name-fields-row>div{min-width:0;display:flex;flex-direction:column;gap:6px}
+.gfcv-edit-form .gfcv-name-fields-row label{font-weight:700;font-size:12px;color:#284455}
+.gfcv-edit-form .gfcv-name-fields-row select{width:100%;min-width:0!important;flex:auto}
+.gfcv-edit-form .gfcv-access-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:15px;row-gap:15px;align-items:start;width:100%;min-width:0}
+.gfcv-edit-form .gfcv-mobile-fields-stack{min-width:0;display:flex;flex-direction:column;gap:15px}
+.gfcv-edit-form .gfcv-allowed-user-names{display:flex;align-items:flex-start;flex-wrap:wrap;gap:6px;min-height:12px;max-width:100%}
+.gfcv-edit-form .gfcv-allowed-user-chip{display:inline-flex;align-items:center;max-width:100%;padding:5px 8px;font-size:11px;color:#176559;background:#e7f5f1;border-radius:7px;line-height:1.7;overflow-wrap:anywhere}
+.gfcv-edit-form .gfcv-allowed-user-chip.is-missing{color:#94542b;background:#fff0e9}
+.gfcv-edit-form .gfcv-selector,
+.gfcv-edit-form .gfcv-field-browser{max-width:100%;width:100%;min-width:0;margin:12px 0;padding:15px;overflow:hidden}
+.gfcv-edit-form .gfcv-picker-row{width:100%;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.gfcv-edit-form .gfcv-picker-row select{flex:1 1 220px;width:100%;min-width:0!important;max-width:100%;box-sizing:border-box}
+.gfcv-edit-form .gfcv-picker-row button{flex:0 0 auto;white-space:normal}
+.gfcv-edit-form .gfcv-field-grid{width:100%;min-width:0;max-width:100%;grid-template-columns:repeat(4,minmax(0,1fr));overflow-x:hidden;overflow-y:auto}
+.gfcv-edit-form .gfcv-field-grid .field-item{min-width:0;max-width:100%;width:100%;white-space:normal;text-align:right;overflow:hidden}
+.gfcv-edit-form .gfcv-field-grid .field-item>span{min-width:0;overflow-wrap:anywhere}
+.gfcv-edit-form .gfcv-selected-chip{max-width:100%;overflow-wrap:anywhere}
+.gfcv-edit-form .gfcv-sms-builder,
+.gfcv-edit-form .gfcv-sms-builder-grid,
+.gfcv-edit-form .gfcv-sms-tokens{min-width:0;max-width:100%}
+.gfcv-edit-form .gfcv-sms-token{max-width:100%;min-width:0}
+.gfcv-edit-form .gfcv-admin-form .CodeMirror,
+.gfcv-edit-form .CodeMirror{max-width:100%;min-width:0}
+@media(max-width:1200px){
+ .gfcv-edit-form .gfcv-field-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .gfcv-edit-form .gfcv-access-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .gfcv-edit-form .gfcv-mobile-fields-stack{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+ .gfcv-edit-form .form-table,.gfcv-edit-form .form-table>tbody,
+ .gfcv-edit-form .form-table>tbody>tr{display:block;width:100%;min-width:0}
+ .gfcv-edit-form .form-table>tbody>tr>th,
+ .gfcv-edit-form .form-table>tbody>tr>td{display:block;width:100%;max-width:none;padding:13px 7px;min-width:0}
+ .gfcv-edit-form .form-table>tbody>tr>th{padding-bottom:0}
+ .gfcv-edit-form .gfcv-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+ .gfcv-admin-wrap.gfcv-admin-wrap{width:100%}
+ .gfcv-edit-form.gfcv-edit-form{padding:10px}
+ .gfcv-edit-form .gfcv-identity-grid,
+ .gfcv-edit-form .gfcv-name-fields-row,
+ .gfcv-edit-form .gfcv-access-grid,
+ .gfcv-edit-form .gfcv-mobile-fields-stack{display:grid;grid-template-columns:minmax(0,1fr)}
+ .gfcv-edit-form .gfcv-mobile-fields-stack{grid-column:auto}
+ .gfcv-edit-form .gfcv-field-grid{grid-template-columns:minmax(0,1fr)}
+ .gfcv-edit-form .gfcv-selector,.gfcv-edit-form .gfcv-field-browser{padding:10px}
+}
