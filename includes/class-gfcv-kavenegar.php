@@ -75,7 +75,7 @@ class GFCV_Kavenegar {
         }
         $mode = sanitize_key(wp_unslash($_POST['mode'] ?? 'latest'));
         $limit = 100;
-        $query = array('sender'=>'0');
+        $query = array();
         if ($mode === 'range') {
             $start = self::parse_date(sanitize_text_field(wp_unslash($_POST['from'] ?? '')));
             $end = self::parse_date(sanitize_text_field(wp_unslash($_POST['to'] ?? '')));
@@ -85,16 +85,18 @@ class GFCV_Kavenegar {
             $endpoint = 'selectoutbox';
             $query = array(
                 'startdate'=>$start->getTimestamp(),
-                'enddate'=>$end->getTimestamp()+DAY_IN_SECONDS-1,
-                'sender'=>'0'
+                'enddate'=>$end->getTimestamp()+DAY_IN_SECONDS-1
             );
         } elseif ($mode === 'latest') {
             $endpoint = 'latestoutbox';
-            $query = array('pagesize'=>$limit,'sender'=>'0');
+            $query = array('pagesize'=>$limit);
         } else {
             wp_send_json_error(array('message'=>'نوع گزارش معتبر نیست.'),400);
         }
 
+        // Kavenegar defines sender as optional for latestoutbox/selectoutbox.
+        // Sending sender=0 can cause API error 412 (invalid sender).
+        // Omit the filter rather than inventing a sender ID.
         $url = 'https://api.kavenegar.com/v1/' . rawurlencode($key)
             . '/sms/' . $endpoint . '.json?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
         // Prevent cross-domain redirects because the API credential is in the path.
