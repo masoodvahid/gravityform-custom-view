@@ -43,13 +43,13 @@ $(function(){
 
         function showModal(){
             restoreFocus=document.activeElement;
-            $modal.show().attr('aria-hidden','false');
+            $modal.addClass('is-open').show().attr('aria-hidden','false');
             $('body').addClass('gfcv-bulk-modal-active');
             $modal.find('.gfcv-bulk-close').trigger('focus');
         }
         function hideModal(){
             if(sending){return;}
-            $modal.hide().attr('aria-hidden','true');
+            $modal.removeClass('is-open').hide().attr('aria-hidden','true');
             $('body').removeClass('gfcv-bulk-modal-active');
             if(restoreFocus&&typeof restoreFocus.focus==='function'){restoreFocus.focus();}
             restoreFocus=null;
