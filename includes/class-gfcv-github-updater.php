@@ -118,16 +118,19 @@ class GFCV_GitHub_Updater {
         // Do not offer a broken release that installs an older plugin header.
         if (!self::validate_release_file($tag, $version)) { return false; }
 
-        $package = '';
-        foreach ((array) ($release['assets'] ?? array()) as $asset) {
-            if (($asset['name'] ?? '') === self::SLUG . '.zip'
-                && !empty($asset['browser_download_url'])) {
-                $package = (string) $asset['browser_download_url'];
-                break;
+        // Download the source archive of the exact validated release tag.
+        // A separately attached ZIP can accidentally contain stale version
+        // headers; GitHub's zipball for this tag cannot point at another commit.
+        $package = !empty($release['zipball_url'])
+            ? (string) $release['zipball_url'] : '';
+        if (!$package) {
+            foreach ((array) ($release['assets'] ?? array()) as $asset) {
+                if (($asset['name'] ?? '') === self::SLUG . '.zip'
+                    && !empty($asset['browser_download_url'])) {
+                    $package = (string) $asset['browser_download_url'];
+                    break;
+                }
             }
-        }
-        if (!$package && !empty($release['zipball_url'])) {
-            $package = (string) $release['zipball_url'];
         }
         if (!$package) {
             self::record_error('فایل ZIP برای این Release در دسترس نیست.');
