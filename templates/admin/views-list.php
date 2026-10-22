@@ -47,6 +47,16 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
                 گزارش پیامک‌های ارسالی
             </a>
             <a href="#gfcv-service-settings" class="button button-secondary">تنظیمات پیامک</a>
+            <?php if (current_user_can('manage_options') && current_user_can('update_plugins')) : ?>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="gfcv-check-updates-form">
+                <input type="hidden" name="action" value="gfcv_refresh_github_updates">
+                <?php wp_nonce_field('gfcv_refresh_updates'); ?>
+                <button type="submit" class="button button-secondary" title="حذف کش و بررسی مستقیم انتشارهای GitHub">
+                    <span class="dashicons dashicons-update" aria-hidden="true"></span>
+                    بررسی فوری به‌روزرسانی
+                </button>
+            </form>
+            <?php endif; ?>
             <a href="<?php echo esc_url($add_url); ?>" class="button button-primary gfcv-dashboard-create">
                 <span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
                 ایجاد لیست جدید
@@ -54,6 +64,25 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
         </div>
     </section>
 
+    <?php if (isset($_GET['gfcv_update_check'])) :
+        $check_status = sanitize_key(wp_unslash($_GET['gfcv_update_check']));
+        $update_error = GFCV_GitHub_Updater::last_error();
+    ?>
+        <?php if ('available' === $check_status) : ?>
+            <div class="notice notice-success inline">
+                <p>نسخه جدید شناسایی شد. برای نصب به <a href="<?php echo esc_url(admin_url('plugins.php')); ?>">افزونه‌های نصب‌شده</a> مراجعه کنید.</p>
+            </div>
+        <?php elseif ('current' === $check_status) : ?>
+            <div class="notice notice-info inline">
+                <p>بررسی مستقیم GitHub انجام شد؛ نسخه نصب‌شده در حال حاضر جدیدترین نسخه معتبر است.</p>
+            </div>
+        <?php elseif ('error' === $check_status) : ?>
+            <div class="notice notice-error inline">
+                <p><strong>بررسی نسخه GitHub ناموفق بود.</strong>
+                <?php echo esc_html($update_error ?: 'اتصال، تنظیمات GitHub و هماهنگی شماره نسخه را بررسی کنید.'); ?></p>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
     <?php if (GFCV_Kavenegar::get_key() === '') : ?>
         <div class="notice notice-warning inline">
             <p><strong>سرویس پیامک آماده نیست.</strong> کلید API سراسری کاوه‌نگار ثبت نشده است؛

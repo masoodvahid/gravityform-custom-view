@@ -1,0 +1,45 @@
+name: Verify release plugin version
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout published tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref_name }}
+          persist-credentials: false
+      - name: Compare tag with plugin metadata
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name || github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_version="${TAG_NAME#v}"
+          header_version="$(php -r '
+            $source = file_get_contents("gravity-form-custom-view.php");
+            if (!preg_match("/^\\s*\\*\\s*Version:\\s*([^\\r\\n]+)/mi", $source, $m)) { exit(2); }
+            echo trim($m[1]);
+          ')"
+          constant_version="$(php -r '
+            $source = file_get_contents("gravity-form-custom-view.php");
+            if (!preg_match("/define\\s*\\(\\s*[\"\x27]GFCV_PLUGIN_VERSION[\"\x27]\\s*,\\s*[\"\x27]([^\"\x27]+)[\"\x27]\\s*\\)/", $source, $m)) { exit(2); }
+            echo $m[1];
+          ')"
+          printf 'Tag: %s\nPlugin header: %s\nVersion constant: %s\n' "$release_version" "$header_version" "$constant_version"
+          if [[ "$release_version" != "$header_version" || "$release_version" != "$constant_version" ]]; then
+            echo "::error::Version mismatch! Update plugin header and GFCV_PLUGIN_VERSION before creating a GitHub Release tag."
+            exit 1
+          fi
+          echo "Release version matches both version declarations."
