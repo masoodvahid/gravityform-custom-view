@@ -110,6 +110,7 @@ class GFCV_Kavenegar {
         if ($status !== 200 || !is_array($data) || (int)($data['return']['status'] ?? 0) !== 200) {
             // Avoid echoing provider details that might include secret URLs.
             $message = (string)($data['return']['message'] ?? 'پاسخ سرویس قابل پردازش نیست.');
+            $message = str_replace($key, '[کلید]', $message);
             $message = preg_replace('/(?:https?:\/\/)?api\.kavenegar\.com\/[^\s]+/iu', '[نشانی API]', $message);
             wp_send_json_error(array('message'=>'دریافت گزارش پیامک انجام نشد: ' . sanitize_text_field($message)),502);
         }
