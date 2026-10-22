@@ -181,13 +181,161 @@
     min-height:37px;border-radius:7px;background:#117f76;border-color:#117f76
 }
 
-/* v1.5.11: native disclosure keeps the SMS log panel usable even when scripts fail. */
-.gfcv-dashboard .gfcv-dashboard-outbox:not([open])>.gfcv-dashboard-outbox-head,
-.gfcv-dashboard .gfcv-dashboard-outbox:not([open])>.gfcv-dashboard-outbox-toolbar,
-.gfcv-dashboard .gfcv-dashboard-outbox:not([open])>.gfcv-outbox-scroll,
-.gfcv-dashboard .gfcv-dashboard-outbox:not([open])>.gfcv-outbox-status,
-.gfcv-dashboard .gfcv-dashboard-outbox:not([open])>.gfcv-outbox-footer{display:none}
-.gfcv-dashboard .gfcv-outbox-summary{padding:13px 18px;cursor:pointer;font-weight:750;color:#225967;background:#f6fafb;list-style-position:inside}
-.gfcv-dashboard .gfcv-outbox-summary-hint{font-weight:400;color:#68808e;font-size:11px;margin-right:10px}
-.gfcv-dashboard .gfcv-outbox-summary:focus-visible{outline:2px solid #128879;outline-offset:-3px}
-.gfcv-dashboard .gfcv-dashboard-outbox[open]>.gfcv-outbox-summary{border-bottom:1px solid #e3ebee}
+
+/* v1.6.3: Kavenegar sent-message report — full, accessible modal. */
+.gfcv-dashboard dialog.gfcv-dashboard-outbox {
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    display: block;
+    width: min(1160px, calc(100vw - 36px));
+    max-width: min(1160px, calc(100vw - 36px));
+    height: min(850px, calc(100vh - 58px));
+    max-height: calc(100vh - 58px);
+    margin: auto;
+    padding: 0;
+    border: 1px solid #dce7ec;
+    border-radius: 16px;
+    overflow: hidden;
+    color: #244152;
+    background: #fff;
+    box-shadow: 0 26px 85px rgba(8, 29, 42, .28);
+}
+.gfcv-dashboard dialog.gfcv-dashboard-outbox:not([open]) {
+    display: none !important;
+}
+.gfcv-dashboard dialog.gfcv-dashboard-outbox::backdrop {
+    background: rgba(12, 28, 42, .58);
+    backdrop-filter: blur(3px);
+}
+.gfcv-dashboard .gfcv-outbox-modal-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox-head {
+    flex: 0 0 auto;
+    padding: 20px 24px;
+    background: #fff;
+    border-bottom: 1px solid #e5ecef;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox-head h2 {
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0 0 7px;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox-head p {
+    line-height: 1.8;
+    margin: 0 0 3px;
+}
+.gfcv-dashboard #gfcv-close-outbox {
+    min-height: 35px;
+    min-width: 68px;
+    border-radius: 8px;
+}
+.gfcv-dashboard .gfcv-outbox-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox-toolbar {
+    gap: 14px;
+    padding: 16px 23px;
+    align-items: flex-end;
+    background: #f6fafb;
+    border-bottom: 1px solid #e5ecef;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox-toolbar select,
+.gfcv-dashboard .gfcv-dashboard-outbox-toolbar input[type=date] {
+    min-width: 160px;
+    border-radius: 7px;
+    border-color: #d4e2e8;
+}
+.gfcv-dashboard .gfcv-outbox-status {
+    min-height: 42px;
+    line-height: 1.75;
+    color: #506b79;
+    padding: 13px 22px;
+}
+.gfcv-dashboard .gfcv-outbox-scroll {
+    overflow-x: auto;
+    width: 100%;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox table {
+    width: 100%;
+    min-width: 890px;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox th,
+.gfcv-dashboard .gfcv-dashboard-outbox td {
+    padding: 11px 14px;
+    line-height: 1.8;
+    font-size: 12px;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f2f7f9;
+}
+.gfcv-dashboard .gfcv-dashboard-outbox .gfcv-outbox-message {
+    max-width: 410px;
+    min-width: 220px;
+    text-align: right;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.gfcv-dashboard .gfcv-outbox-footer {
+    padding: 14px 22px 20px;
+    background: #fff;
+}
+body.gfcv-outbox-fallback-active {
+    overflow: hidden;
+}
+.gfcv-dashboard dialog.gfcv-dashboard-outbox.gfcv-outbox-fallback-open {
+    z-index: 99999;
+}
+@media (max-width: 780px) {
+    .gfcv-dashboard dialog.gfcv-dashboard-outbox {
+        width: calc(100vw - 20px);
+        max-width: calc(100vw - 20px);
+        height: calc(100vh - 34px);
+        max-height: calc(100vh - 34px);
+        border-radius: 12px;
+    }
+    .gfcv-dashboard .gfcv-dashboard-outbox-head {
+        padding: 15px 16px;
+        align-items: flex-start;
+    }
+    .gfcv-dashboard .gfcv-dashboard-outbox-head h2 {
+        font-size: 16px;
+    }
+    .gfcv-dashboard .gfcv-dashboard-outbox-head p {
+        font-size: 11px;
+    }
+    .gfcv-dashboard .gfcv-dashboard-outbox-toolbar {
+        padding: 13px 15px;
+        gap: 10px;
+    }
+    .gfcv-dashboard .gfcv-outbox-status {
+        padding: 12px 15px;
+    }
+}
+@media (max-width: 480px) {
+    .gfcv-dashboard .gfcv-dashboard-outbox-toolbar label {
+        flex: 1 1 100%;
+    }
+    .gfcv-dashboard .gfcv-dashboard-outbox-toolbar select,
+    .gfcv-dashboard .gfcv-dashboard-outbox-toolbar input[type=date] {
+        width: 100%;
+        max-width: 100%;
+    }
+    .gfcv-dashboard .gfcv-dashboard-outbox-head {
+        gap: 8px;
+    }
+    .gfcv-dashboard #gfcv-close-outbox {
+        min-width: 52px;
+    }
+}

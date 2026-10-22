@@ -42,10 +42,10 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
             <p>لیست‌های متصل به فرم‌ها را از همین‌جا مدیریت کنید، کد کوتاه آن‌ها را بردارید و تنظیمات دسترسی و پیامک را ویرایش کنید.</p>
         </div>
         <div class="gfcv-dashboard-hero-actions">
-            <a href="#gfcv-dashboard-outbox" id="gfcv-show-outbox" class="button button-secondary" aria-controls="gfcv-dashboard-outbox" aria-expanded="false">
+            <button type="button" id="gfcv-show-outbox" class="button button-secondary" aria-haspopup="dialog" aria-controls="gfcv-dashboard-outbox" aria-expanded="false">
                 <span class="dashicons dashicons-email-alt" aria-hidden="true"></span>
                 گزارش پیامک‌های ارسالی
-            </a>
+            </button>
             <a href="#gfcv-service-settings" class="button button-secondary">تنظیمات پیامک</a>
             <?php if (current_user_can('manage_options') && current_user_can('update_plugins')) : ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="gfcv-check-updates-form">
@@ -125,16 +125,18 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
         </div>
     </section>
 
-    <details class="gfcv-dashboard-outbox" id="gfcv-dashboard-outbox" aria-labelledby="gfcv-outbox-heading">
-        <summary class="gfcv-outbox-summary">گزارش پیامک‌های ارسالی <span class="gfcv-outbox-summary-hint">برای بازکردن گزارش کلیک کنید</span></summary>
+    <dialog class="gfcv-dashboard-outbox" id="gfcv-dashboard-outbox" aria-modal="true"
+            aria-labelledby="gfcv-outbox-heading" aria-describedby="gfcv-outbox-description" dir="rtl">
+        <div class="gfcv-outbox-modal-shell">
         <div class="gfcv-dashboard-outbox-head">
             <div>
                 <h2 id="gfcv-outbox-heading">گزارش پیامک‌های ارسالی کاوه‌نگار</h2>
-                <p>گزارش از حساب کاوه‌نگار خوانده می‌شود و ممکن است شامل پیامک‌هایی خارج از این افزونه نیز باشد.</p>
+                <p id="gfcv-outbox-description">گزارش از حساب کاوه‌نگار خوانده می‌شود و ممکن است شامل پیامک‌هایی خارج از این افزونه نیز باشد.</p>
                 <p>اگر پس از بازکردن گزارش، خطای سرویس رخ دهد، جزئیات قابل‌فهم آن همین‌جا نمایش داده می‌شود.</p>
             </div>
             <button type="button" id="gfcv-close-outbox" class="button button-secondary" aria-label="بستن گزارش پیامک‌ها">بستن</button>
         </div>
+        <div class="gfcv-outbox-modal-body">
         <form id="gfcv-outbox-filters" class="gfcv-dashboard-outbox-toolbar">
             <label>نوع گزارش
                 <select id="gfcv-outbox-mode" aria-label="نوع گزارش">
@@ -172,7 +174,9 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
             <span id="gfcv-outbox-page-label" aria-live="polite"></span>
             <button type="button" class="button button-secondary" id="gfcv-outbox-next">صفحه بعد</button>
         </div>
-    </details>
+        </div>
+        </div>
+    </dialog>
 
     <section class="gfcv-dashboard-list-panel" aria-labelledby="gfcv-views-heading">
         <div class="gfcv-dashboard-panel-head">
