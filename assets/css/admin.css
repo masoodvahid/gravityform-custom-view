@@ -170,3 +170,13 @@
 @media(max-width:1190px){.gfcv-dashboard .gfcv-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:780px){.gfcv-dashboard .gfcv-dashboard-hero{padding:20px}.gfcv-dashboard .gfcv-dashboard-toolbar,.gfcv-dashboard .gfcv-dashboard-panel-head{padding-left:14px;padding-right:14px}.gfcv-dashboard .gfcv-dashboard-stats{gap:10px}.gfcv-dashboard .gfcv-stat-card{min-height:97px;padding:12px}.gfcv-dashboard .gfcv-dashboard-hero h1{font-size:22px}}
 @media(max-width:520px){.gfcv-dashboard .gfcv-dashboard-stats{grid-template-columns:1fr}.gfcv-dashboard .gfcv-dashboard-search{max-width:none}.gfcv-dashboard .gfcv-dashboard-toolbar{align-items:stretch}.gfcv-dashboard .gfcv-dashboard-hero-actions{width:100%}}
+
+/* Align quick actions and log filters with the primary create button. */
+.gfcv-dashboard .gfcv-dashboard-hero-actions>.button-secondary{
+    display:inline-flex;align-items:center;gap:6px;min-height:41px;padding:0 13px;
+    border-radius:8px;border-color:#d6e3e6;color:#355b68;background:#fff;font-weight:650
+}
+.gfcv-dashboard .gfcv-dashboard-hero-actions>.button-secondary .dashicons{font-size:17px;width:17px;height:17px}
+.gfcv-dashboard .gfcv-dashboard-outbox-toolbar .button-primary{
+    min-height:37px;border-radius:7px;background:#117f76;border-color:#117f76
+}
