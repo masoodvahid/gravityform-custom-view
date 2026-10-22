@@ -73,7 +73,7 @@ class GFCV_Bulk_User_SMS {
         }
         $view_id=absint($_POST['view_id'] ?? 0);
         $view=GFCV_DB::get_instance()->get_view($view_id);
-        if (!$view || empty($view->user_sms_pattern) || empty($view->user_mobile_field_id)) {
+        if (!$view || empty($view->user_sms_pattern) || (empty($view->user_mobile_field_id) && empty($view->fallback_mobile_field_id))) {
             wp_send_json_error(array('message'=>'در این لیست، پترن پیامک کاربر یا شناسه فیلد موبایل تنظیم نشده است.'),400);
         }
         $raw_ids=isset($_POST['entry_ids']) ? (array)wp_unslash($_POST['entry_ids']) : array();
@@ -105,7 +105,7 @@ class GFCV_Bulk_User_SMS {
                 $skipped[]=array('entry_id'=>$entry_id,'reason'=>'رکورد معتبر یا فعال نیست.');
                 continue;
             }
-            $mobile=self::mobile(rgar($entry,(string)$view->user_mobile_field_id));
+            $mobile=self::mobile(GFCV_Shortcode::entry_user_mobile($entry, $view));
             if ($mobile==='') {
                 $skipped[]=array('entry_id'=>$entry_id,'reason'=>'شماره موبایل معتبر ندارد.');
                 continue;

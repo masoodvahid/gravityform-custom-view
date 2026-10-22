@@ -373,6 +373,20 @@ class GFCV_Shortcode {
     }
 
     /**
+     * Pick the configured backup mobile only when the primary field is empty.
+     * Used by single-recipient and bulk SMS to keep their behavior aligned.
+     */
+    public static function entry_user_mobile($entry, $view) {
+        $primary_id = trim((string) ($view->user_mobile_field_id ?? ''));
+        $fallback_id = trim((string) ($view->fallback_mobile_field_id ?? ''));
+        $value = $primary_id !== '' ? rgar($entry, $primary_id) : '';
+        if (!is_scalar($value) || trim((string) $value) === '') {
+            $value = $fallback_id !== '' ? rgar($entry, $fallback_id) : '';
+        }
+        return is_scalar($value) ? trim((string) $value) : '';
+    }
+
+    /**
      * AJAX handler for getting SMS template
      */
     public function ajax_get_sms_template() {
@@ -406,8 +420,8 @@ class GFCV_Shortcode {
         $body = (string)($type === 'admin' ? ($view->admin_sms_template_text ?? '') : ($view->user_sms_template_text ?? ''));
         $params = $this->build_sms_test_params($pattern,$entry,$form);
         $template = (string)($params['template'] ?? '');
-        $recipient = $type === 'user' && !empty($view->user_mobile_field_id)
-            ? (string)rgar($entry,(string)$view->user_mobile_field_id)
+        $recipient = $type === 'user'
+            ? self::entry_user_mobile($entry, $view)
             : (string)($view->admin_mobile_numbers ?? '');
         if (trim($body)!=='') {
             $message = GFCV_SMS_Builder::render_body($body,$params);
@@ -748,7 +762,7 @@ class GFCV_Shortcode {
         $pattern = $type === 'admin' ? $view->admin_sms_pattern : $view->user_sms_pattern;
         if (!$pattern) { wp_send_json_error(array('message'=>'پترن پیامک تعیین نشده است.'),400); }
         $raw_recipient = $type === 'user'
-            ? (string)rgar($entry, (string)$view->user_mobile_field_id)
+            ? self::entry_user_mobile($entry, $view)
             : (string)$view->admin_mobile_numbers;
         $numbers = preg_split('/[,;\\s]+/u', $raw_recipient, -1, PREG_SPLIT_NO_EMPTY);
         $numbers = array_values(array_unique(array_filter($numbers,function($n){

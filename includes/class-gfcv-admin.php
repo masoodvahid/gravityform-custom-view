@@ -50,6 +50,7 @@ class GFCV_Admin {
         add_action('wp_ajax_gfcv_test_sms', array($this, 'ajax_test_sms'));
         add_action('wp_ajax_gfcv_preview_sms', array($this, 'ajax_preview_sms'));
         add_action('wp_ajax_gfcv_sms_builder_sample', array($this, 'ajax_sms_builder_sample'));
+        add_action('wp_ajax_gfcv_resolve_allowed_users', array($this, 'ajax_resolve_allowed_users'));
     }
 
     /**
@@ -60,8 +61,8 @@ class GFCV_Admin {
         // capabilities. Only users with manage_options can see/use this page.
         // Keep the legacy gf_custom_view slug so saved links still work.
         $this->page_hook = add_menu_page(
-            __('مدیریت لیست‌های نمایشی', 'gravity-form-custom-view'),
-            __('لیست‌های گرویتی فرم', 'gravity-form-custom-view'),
+            __('مدیریت نمایش فرم', 'gravity-form-custom-view'),
+            __('مدیریت نمایش فرم', 'gravity-form-custom-view'),
             'manage_options',
             'gf_custom_view',
             array($this, 'display_admin_page'),
@@ -271,9 +272,14 @@ class GFCV_Admin {
                 'send_to_api' => isset($_POST['send_to_api']) ? 1 : 0,
                 'send_to_details' => wp_kses_post($_POST['send_to_details']),
                 'details_view_html' => wp_kses_post($_POST['details_view_html']),
-                'user_access_ids' => sanitize_text_field($_POST['user_access_ids']),
-                'user_mobile_field_id' => sanitize_text_field($_POST['user_mobile_field_id']),
-                'admin_mobile_numbers' => sanitize_text_field($_POST['admin_mobile_numbers'])
+                'user_access_ids' => implode(',', array_values(array_unique(array_filter(array_map(
+                    'absint', preg_split('/[،,;\\s]+/u',
+                        sanitize_text_field(wp_unslash($_POST['user_access_ids'] ?? '')),
+                        -1, PREG_SPLIT_NO_EMPTY)
+                ))))),
+                'user_mobile_field_id' => $this->sanitize_pdf_field_id($_POST['user_mobile_field_id'] ?? ''),
+                'fallback_mobile_field_id' => $this->sanitize_pdf_field_id($_POST['fallback_mobile_field_id'] ?? ''),
+                'admin_mobile_numbers' => sanitize_text_field(wp_unslash($_POST['admin_mobile_numbers'] ?? ''))
             );
             
             if ($view_id) {
@@ -308,6 +314,36 @@ class GFCV_Admin {
     private function sanitize_pdf_field_id($value) {
         $value = sanitize_text_field(wp_unslash((string) $value));
         return preg_match('/^[0-9]+(?:\\.[0-9]+)?$/', $value) ? $value : '';
+    }
+
+    /**
+     * Resolve WordPress user IDs to display names in the permissions editor.
+     * Names are shown only to administrators with manage_options.
+     */
+    public function ajax_resolve_allowed_users() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'دسترسی غیرمجاز'), 403);
+        }
+        check_ajax_referer('gfcv_save_view', 'nonce');
+        $raw = isset($_POST['ids'])
+            ? sanitize_text_field(wp_unslash($_POST['ids'])) : '';
+        $parts = preg_split('/[،,;\\s]+/u', $raw, -1, PREG_SPLIT_NO_EMPTY);
+        $ids = array_slice(array_values(array_unique(array_filter(array_map('absint', (array)$parts)))), 0, 100);
+        $out = array();
+        foreach ($ids as $id) {
+            $user = get_userdata($id);
+            if (!$user) {
+                $out[] = array('id' => $id, 'name' => '', 'found' => false);
+                continue;
+            }
+            $full_name = trim((string)$user->first_name . ' ' . (string)$user->last_name);
+            $out[] = array(
+                'id' => $id,
+                'name' => $full_name !== '' ? $full_name : $user->display_name,
+                'found' => true
+            );
+        }
+        wp_send_json_success(array('users' => $out));
     }
 
     /**

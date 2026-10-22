@@ -67,6 +67,7 @@ class GFCV_DB {
             details_view_html text,
             user_access_ids text,
             user_mobile_field_id varchar(10),
+            fallback_mobile_field_id varchar(20) NOT NULL DEFAULT '',
             admin_mobile_numbers text,
             show_all_options tinyint(1) NOT NULL DEFAULT 1,
             respect_conditional_logic tinyint(1) NOT NULL DEFAULT 1,
@@ -85,9 +86,9 @@ class GFCV_DB {
      * This is intentionally versioned separately from the plugin's display version.
      */
     public static function maybe_upgrade() {
-        if (get_option('gfcv_db_version') !== '1.5.9') {
+        if (get_option('gfcv_db_version') !== '1.7.0') {
             self::create_tables();
-            update_option('gfcv_db_version', '1.5.9');
+            update_option('gfcv_db_version', '1.7.0');
         }
     }
 
