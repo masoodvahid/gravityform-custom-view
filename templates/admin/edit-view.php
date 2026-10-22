@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 $is_edit = isset($view) && $view;
-$title = $is_edit ? __('ویرایش نمای سفارشی', 'gravity-form-custom-view') : __('افزودن نمای سفارشی', 'gravity-form-custom-view');
+$title = $is_edit ? __('ویرایش لیست نتایج', 'gravity-form-custom-view') : __('افزودن لیست نتایج', 'gravity-form-custom-view');
 
 // Set default values
 $view_data = array(
@@ -28,6 +28,7 @@ $view_data = array(
     'details_view_html' => '',
     'user_access_ids' => '',
     'user_mobile_field_id' => '5',
+    'fallback_mobile_field_id' => '',
     'admin_mobile_numbers' => '',
     'show_all_options' => 1,
     'respect_conditional_logic' => 1,
@@ -59,38 +60,35 @@ if ($is_edit) {
     </div>
     <?php endif; ?>
     
-    <form method="post" action="" class="gfcv-admin-form">
+    <form method="post" action="" class="gfcv-admin-form gfcv-edit-form">
         <?php wp_nonce_field('gfcv_save_view', 'gfcv_nonce'); ?>
         <input type="hidden" name="gfcv_action" value="save_view">
         <input type="hidden" name="view_id" value="<?php echo esc_attr($view_data['id']); ?>">
         
         <table class="form-table">
-            <tr>
-                <th scope="row">
-                    <label for="view_title"><?php _e('عنوان نمای سفارشی', 'gravity-form-custom-view'); ?></label>
-                </th>
+            <tr class="gfcv-form-identity-row">
+                <th scope="row">اطلاعات لیست نمایشی</th>
                 <td>
-                    <input type="text" id="view_title" name="view_title" value="<?php echo esc_attr($view_data['view_title']); ?>" class="regular-text" required>
+                    <div class="gfcv-identity-grid">
+                        <div class="gfcv-form-control">
+                            <label for="form_id">اتصال به فرم گرویتی فرم</label>
+                            <select id="form_id" name="form_id" required>
+                                <option value="">انتخاب فرم</option>
+                                <?php foreach ($forms as $form) : ?>
+                                    <option value="<?php echo esc_attr($form['id']); ?>" <?php selected($view_data['form_id'], $form['id']); ?>>
+                                        <?php echo esc_html($form['title']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="gfcv-form-control">
+                            <label for="view_title">عنوان لیست نمایشی</label>
+                            <input type="text" id="view_title" name="view_title" value="<?php echo esc_attr($view_data['view_title']); ?>" required>
+                        </div>
+                    </div>
+                    <p class="description">ابتدا فرم مرتبط را انتخاب کرده و سپس عنوان نمایش نتایج آن را وارد کنید.</p>
                 </td>
             </tr>
-            
-            <tr>
-                <th scope="row">
-                    <label for="form_id"><?php _e('فرم گرویتی', 'gravity-form-custom-view'); ?></label>
-                </th>
-                <td>
-                    <select id="form_id" name="form_id" required>
-                        <option value=""><?php _e('انتخاب فرم', 'gravity-form-custom-view'); ?></option>
-                        <?php foreach ($forms as $form) : ?>
-                            <option value="<?php echo esc_attr($form['id']); ?>" <?php selected($view_data['form_id'], $form['id']); ?>>
-                                <?php echo esc_html($form['title']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <p class="description"><?php _e('فرمی را که رکوردهایش در این نما نمایش داده می‌شوند انتخاب کنید.', 'gravity-form-custom-view'); ?></p>
-                </td>
-            </tr>
-            
             <tr>
                 <th scope="row">نام فایل PDF</th>
                 <td>
@@ -124,9 +122,9 @@ if ($is_edit) {
                         }
                     }
                     ?>
-                    <div class="gfcv-picker-row" style="margin:12px 0 8px">
+                    <div class="gfcv-name-fields-row">
                         <div>
-                            <label for="pdf_first_name_field_id" style="display:block;margin-bottom:5px">فیلد نام</label>
+                            <label for="pdf_first_name_field_id">فیلد نام</label>
                             <select name="pdf_first_name_field_id" id="pdf_first_name_field_id">
                                 <option value="">انتخاب فیلد نام</option>
                                 <?php foreach ($pdf_fields as $pdf_field_option) : ?>
@@ -137,7 +135,7 @@ if ($is_edit) {
                             </select>
                         </div>
                         <div>
-                            <label for="pdf_last_name_field_id" style="display:block;margin-bottom:5px">فیلد نام خانوادگی</label>
+                            <label for="pdf_last_name_field_id">فیلد نام خانوادگی</label>
                             <select name="pdf_last_name_field_id" id="pdf_last_name_field_id">
                                 <option value="">انتخاب فیلد نام خانوادگی</option>
                                 <?php foreach ($pdf_fields as $pdf_field_option) : ?>
@@ -154,15 +152,15 @@ if ($is_edit) {
 
             <tr>
                 <th scope="row">
-                    <label for="field_ids"><?php _e('فیلدهای جدول رکوردها', 'gravity-form-custom-view'); ?></label>
+                    <label for="field_ids"><?php _e('فیلدهای لیست نمایشی', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="field_ids" name="field_ids" value="<?php echo esc_attr($view_data['field_ids']); ?>">
                     <div class="gfcv-selector">
-                        <label for="gfcv_field_picker">انتخاب فیلد برای جدول</label>
+                        <label for="gfcv_field_picker">انتخاب فیلد برای لیست</label>
                         <div class="gfcv-picker-row">
                             <select id="gfcv_field_picker"><option value="">یک فیلد انتخاب کنید...</option></select>
-                            <button type="button" class="button button-secondary" id="gfcv_add_field">افزودن به جدول</button>
+                            <button type="button" class="button button-secondary" id="gfcv_add_field">افزودن به لیست</button>
                         </div>
                         <div id="gfcv_selected_fields" class="gfcv-selected-fields"></div>
                     </div>
@@ -187,6 +185,73 @@ if ($is_edit) {
                 </td>
             </tr>
             
+            <tr class="gfcv-access-and-mobile-row">
+                <th scope="row">دسترسی و شماره‌های پیامک</th>
+                <td>
+                    <div class="gfcv-access-grid">
+                        <div class="gfcv-form-control">
+                            <label for="user_access_ids">شناسه کاربران مجاز</label>
+                            <input type="text" id="user_access_ids" name="user_access_ids"
+                                dir="ltr" value="<?php echo esc_attr($view_data['user_access_ids']); ?>"
+                                placeholder="12, 34, 56" autocomplete="off">
+                            <p class="description">شناسه‌ها را با ویرگول جدا کنید؛ خالی بودن به معنی عمومی‌بودن لیست است.</p>
+                            <div id="gfcv-allowed-user-names" class="gfcv-allowed-user-names"
+                                role="status" aria-live="polite">
+                                <?php
+                                $initial_access_ids = array_unique(array_filter(array_map(
+                                    'absint', preg_split('/[،,;\\s]+/u', (string) $view_data['user_access_ids'], -1, PREG_SPLIT_NO_EMPTY)
+                                )));
+                                foreach (array_slice($initial_access_ids, 0, 100) as $user_id) :
+                                    $allowed_user = get_userdata($user_id);
+                                    $allowed_name = $allowed_user
+                                        ? trim((string) $allowed_user->first_name . ' ' . (string) $allowed_user->last_name)
+                                        : '';
+                                    if ($allowed_user && $allowed_name === '') {
+                                        $allowed_name = $allowed_user->display_name;
+                                    }
+                                ?>
+                                    <span class="gfcv-allowed-user-chip <?php echo $allowed_user ? '' : 'is-missing'; ?>">
+                                        <?php echo esc_html($user_id . ' — ' . ($allowed_user ? $allowed_name : 'کاربر یافت نشد')); ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <div class="gfcv-form-control">
+                            <label for="admin_mobile_numbers">شماره‌های موبایل مدیران</label>
+                            <textarea id="admin_mobile_numbers" name="admin_mobile_numbers" rows="2" dir="ltr"
+                                placeholder="09123456789, 09123456780"><?php echo esc_textarea($view_data['admin_mobile_numbers']); ?></textarea>
+                            <p class="description">شماره‌ها را با ویرگول جدا کنید.</p>
+                        </div>
+                        <div class="gfcv-mobile-fields-stack">
+                            <div class="gfcv-form-control">
+                                <label for="user_mobile_field_id">شناسه فیلد موبایل کاربر</label>
+                                <select id="user_mobile_field_id" name="user_mobile_field_id">
+                                    <option value="">انتخاب فیلد شماره همراه</option>
+                                    <?php foreach ($pdf_fields as $phone_option) : ?>
+                                        <option value="<?php echo esc_attr($phone_option['id']); ?>"
+                                            <?php selected((string)$view_data['user_mobile_field_id'], $phone_option['id']); ?>>
+                                            <?php echo esc_html($phone_option['id'] . ' — ' . $phone_option['label']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="gfcv-form-control">
+                                <label for="fallback_mobile_field_id">فیلد شماره جایگزین در صورت خالی بودن فیلد شماره موبایل کاربر</label>
+                                <select id="fallback_mobile_field_id" name="fallback_mobile_field_id">
+                                    <option value="">بدون فیلد جایگزین</option>
+                                    <?php foreach ($pdf_fields as $phone_option) : ?>
+                                        <option value="<?php echo esc_attr($phone_option['id']); ?>"
+                                            <?php selected((string)$view_data['fallback_mobile_field_id'], $phone_option['id']); ?>>
+                                            <?php echo esc_html($phone_option['id'] . ' — ' . $phone_option['label']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <p class="description">فقط وقتی مقدار فیلد اول خالی باشد استفاده می‌شود.</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
             <tr><th scope="row">تنظیمات نمایش پاسخ‌ها</th><td>
                 <label class="gfcv-setting"><input type="checkbox" name="show_all_options" value="1" <?php checked($view_data['show_all_options'], 1); ?>> نمایش تمام گزینه‌های سؤالات چندگزینه‌ای</label>
                 <p class="description">وقتی غیرفعال باشد، فقط پاسخ‌های انتخاب‌شده در نمایش جزئیات می‌آیند.</p>
@@ -244,36 +309,6 @@ if ($is_edit) {
                 </td>
             </tr>
             
-            <tr>
-                <th scope="row">
-                    <label for="user_access_ids"><?php _e('شناسه کاربران مجاز', 'gravity-form-custom-view'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="user_access_ids" name="user_access_ids" value="<?php echo esc_attr($view_data['user_access_ids']); ?>" class="regular-text">
-                    <p class="description"><?php _e('شناسه کاربران مجاز را با ویرگول جدا کنید؛ خالی بودن یعنی عدم اعمال محدودیت کاربران.', 'gravity-form-custom-view'); ?></p>
-                </td>
-            </tr>
-            
-            <tr>
-                <th scope="row">
-                    <label for="user_mobile_field_id"><?php _e('شناسه فیلد موبایل کاربر', 'gravity-form-custom-view'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="user_mobile_field_id" name="user_mobile_field_id" value="<?php echo esc_attr(isset($view_data['user_mobile_field_id']) ? $view_data['user_mobile_field_id'] : ''); ?>" class="regular-text">
-                    <p class="description"><?php _e('شناسه فیلدی که شماره موبایل کاربر در آن ذخیره شده است (مانند ۵).', 'gravity-form-custom-view'); ?></p>
-                </td>
-            </tr>
-            
-            <tr>
-                <th scope="row">
-                    <label for="admin_mobile_numbers"><?php _e('شماره‌های موبایل مدیران', 'gravity-form-custom-view'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="admin_mobile_numbers" name="admin_mobile_numbers" value="<?php echo esc_attr(isset($view_data['admin_mobile_numbers']) ? $view_data['admin_mobile_numbers'] : ''); ?>" class="regular-text">
-                    <p class="description"><?php _e('شماره‌های مدیران را با ویرگول جدا کنید.', 'gravity-form-custom-view'); ?></p>
-                </td>
-            </tr>
-
         </table>
         
         <?php if ($is_edit) : ?>
@@ -283,7 +318,7 @@ if ($is_edit) {
         <?php endif; ?>
         
         <p class="submit">
-            <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo $is_edit ? esc_attr__('ذخیره تغییرات نمای سفارشی', 'gravity-form-custom-view') : esc_attr__('ایجاد نمای سفارشی', 'gravity-form-custom-view'); ?>">
+            <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo $is_edit ? esc_attr__('ذخیره تغییرات لیست نتایج', 'gravity-form-custom-view') : esc_attr__('ایجاد لیست نتایج', 'gravity-form-custom-view'); ?>">
             <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view')); ?>" class="button"><?php _e('انصراف', 'gravity-form-custom-view'); ?></a>
         </p>
     </form>
