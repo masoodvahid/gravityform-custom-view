@@ -150,8 +150,15 @@ $(function() {
     });
     $('#gfcv-outbox-prev').on('click',function(){page--;renderPage();});
     $('#gfcv-outbox-next').on('click',function(){page++;renderPage();});
-    if(window.location.hash==='#gfcv-service-settings') {
-        $('#gfcv-service-settings').prop('open',true);
+    function openServiceSettings(){
+        if(window.location.hash==='#gfcv-service-settings') {
+            $('#gfcv-service-settings').prop('open',true);
+        }
     }
+    $page.on('click','a[href="#gfcv-service-settings"]',function(){
+        $('#gfcv-service-settings').prop('open',true);
+    });
+    $(window).on('hashchange',openServiceSettings);
+    openServiceSettings();
 });
 })(jQuery);
