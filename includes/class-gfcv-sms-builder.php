@@ -35,7 +35,7 @@ class GFCV_SMS_Builder {
     }
 
     /** Plain text-only replacement: do not let an SMS pattern turn into HTML. */
-    private static function render_body($body, $params) {
+    public static function render_body($body, $params) {
         $body = sanitize_textarea_field((string)$body);
         $body = preg_replace_callback('/%(token(?:2|3|10|20)?)(?:%|\\b)/iu',
             function($m) use ($params) {
@@ -97,15 +97,16 @@ class GFCV_SMS_Builder {
         $mobile = $mobile_input !== '' ? self::normalize_mobile($mobile_input) : '';
         $ticket = '';
         $saved_pattern = $view ? (string)($type === 'admin' ? $view->admin_sms_pattern : $view->user_sms_pattern) : '';
+        $saved_body = $view ? (string)($type === 'admin' ? $view->admin_sms_template_text : $view->user_sms_template_text) : '';
         if ($mobile_input !== '' && !$mobile) {
             wp_send_json_error(array('message'=>'شماره موبایل تستی معتبر نیست؛ نمونه: 09123456789.'),400);
         }
-        if ($view && $mobile && $pattern === $saved_pattern && !empty($view->kavenegar_api_key) && $has_entry) {
+        if ($view && $mobile && $pattern === $saved_pattern && $body === $saved_body && !empty($view->kavenegar_api_key) && $has_entry) {
             $ticket = wp_generate_password(30, false, false);
             set_transient('gfcv_sms_preview_' . get_current_user_id() . '_' . $ticket, array(
                 'view_id'=>$view_id,'form_id'=>$form_id,'type'=>$type,'mobile'=>$mobile,
                 'params'=>array_merge(array('template'=>$template),$result),
-                'pattern_hash'=>hash('sha256',$saved_pattern)
+                'pattern_hash'=>hash('sha256',$saved_pattern . "\n" . $saved_body)
             ), 5 * MINUTE_IN_SECONDS);
         }
         wp_send_json_success(array(
@@ -138,7 +139,7 @@ class GFCV_SMS_Builder {
             wp_send_json_error(array('message'=>'نمای ذخیره‌شده یا کلید API معتبر نیست.'),400);
         }
         $saved_pattern = ($ticket_data['type'] === 'admin') ? $view->admin_sms_pattern : $view->user_sms_pattern;
-        if (!hash_equals($ticket_data['pattern_hash'], hash('sha256',(string)$saved_pattern))) {
+        if (!hash_equals($ticket_data['pattern_hash'], hash('sha256',(string)$saved_pattern . "\n" . (string)(($ticket_data['type'] === 'admin') ? $view->admin_sms_template_text : $view->user_sms_template_text)))) {
             wp_send_json_error(array('message'=>'پترن از زمان پیش‌نمایش تغییر کرده است؛ دوباره بررسی کنید.'),400);
         }
         set_transient($limit, 1, MINUTE_IN_SECONDS);
