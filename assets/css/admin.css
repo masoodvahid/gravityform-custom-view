@@ -71,6 +71,7 @@
 
 
 /* v1.5.10 Admin dashboard — scoped to the list overview */
+.gfcv-dashboard [hidden]{display:none!important}
 .gfcv-dashboard{max-width:1370px;margin-top:20px;color:#233b48}
 .gfcv-dashboard *{box-sizing:border-box}
 .gfcv-dashboard .gfcv-dashboard-hero{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;padding:26px 30px;background:#fff;border:1px solid #dce7eb;border-right:4px solid #168e84;border-radius:14px;box-shadow:0 4px 20px rgba(20,43,56,.04)}
