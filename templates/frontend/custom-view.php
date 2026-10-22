@@ -178,7 +178,7 @@ $sms_actions_allowed = is_user_logged_in() && (
             <div class="gfcv-bulk-results" aria-live="polite"></div>
             <p class="gfcv-bulk-report-link" hidden>
                 برای بررسی وضعیت پیامک‌های ارسالی به
-                <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view')); ?>" target="_blank" rel="noopener">مدیریت افزونه ← گزارش پیامک‌ها</a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view#gfcv-dashboard-outbox')); ?>" target="_blank" rel="noopener">مدیریت افزونه ← گزارش پیامک‌ها</a>
                 مراجعه کنید. پذیرش درخواست توسط کاوه‌نگار به معنی تحویل قطعی نیست.
             </p>
         </div>
