@@ -707,79 +707,66 @@ class GFCV_Shortcode {
      * AJAX handler for sending SMS via Kavenegar
      */
     public function ajax_send_sms() {
-        // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'gfcv_nonce')) {
-            wp_send_json_error(array('message' => __('بررسی امنیتی ناموفق بود', 'gravity-form-custom-view')));
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'gfcv_nonce')) {
+            wp_send_json_error(array('message'=>'بررسی امنیتی ناموفق بود.'),403);
         }
-        
-        $entry_id = isset($_POST['entry_id']) ? absint($_POST['entry_id']) : 0;
-        $view_id = isset($_POST['view_id']) ? absint($_POST['view_id']) : 0;
-        $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
-        
-        if (!$entry_id || !$view_id || !in_array($type, array('user', 'admin'))) {
-            wp_send_json_error(array('message' => __('پارامترهای نامعتبر', 'gravity-form-custom-view')));
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message'=>'برای ارسال پیامک باید وارد حساب کاربری شوید.'),403);
         }
-        
-        // Get the view
-        $db = GFCV_DB::get_instance();
-        $view = $db->get_view($view_id);
-        
-        if (!$view) {
-            wp_send_json_error(array('message' => __('نمای سفارشی یافت نشد', 'gravity-form-custom-view')));
+        $entry_id = absint($_POST['entry_id'] ?? 0);
+        $view_id = absint($_POST['view_id'] ?? 0);
+        $type = sanitize_key(wp_unslash($_POST['type'] ?? ''));
+        if (!$entry_id || !$view_id || !in_array($type,array('user','admin'),true)) {
+            wp_send_json_error(array('message'=>'شناسه پیامک معتبر نیست.'),400);
         }
-        
-        // Check if API key is set
-        if (empty($view->kavenegar_api_key)) {
-            wp_send_json_error(array('message' => __('کلید API کاوه نگار تنظیم نشده است', 'gravity-form-custom-view')));
+        $view = GFCV_DB::get_instance()->get_view($view_id);
+        if (!$view || (!current_user_can('manage_options') && !is_super_admin() &&
+            (empty($view->user_access_ids) || !$this->user_has_access((string)$view->user_access_ids)))) {
+            wp_send_json_error(array('message'=>'اجازه ارسال پیامک از این نما را ندارید.'),403);
         }
-        
-        // Get the entry
-        if (!class_exists('GFAPI')) {
-            wp_send_json_error(array('message' => __('API گرویتی فرم در دسترس نیست', 'gravity-form-custom-view')));
+        if (empty($view->kavenegar_api_key) || !class_exists('GFAPI')) {
+            wp_send_json_error(array('message'=>'کلید کاوه‌نگار یا Gravity Forms در دسترس نیست.'),400);
         }
-        
         $entry = GFAPI::get_entry($entry_id);
-        
-        if (is_wp_error($entry)) {
-            wp_send_json_error(array('message' => __('خطا در بازیابی اطلاعات فرم', 'gravity-form-custom-view')));
+        if (is_wp_error($entry) || !is_array($entry) || (int)rgar($entry,'form_id')!==(int)$view->form_id ||
+            rgar($entry,'status')!=='active') {
+            wp_send_json_error(array('message'=>'رکورد متعلق به این فرم نیست.'),404);
         }
-        
-        // Get the form
         $form = GFAPI::get_form($view->form_id);
-        
-        // Get the pattern and recipient
+        if (!$form || is_wp_error($form)) { wp_send_json_error(array('message'=>'فرم یافت نشد.'),404); }
         $pattern = $type === 'admin' ? $view->admin_sms_pattern : $view->user_sms_pattern;
-        
-        if (empty($pattern)) {
-            wp_send_json_error(array('message' => __('الگوی پیامک تنظیم نشده است', 'gravity-form-custom-view')));
+        if (!$pattern) { wp_send_json_error(array('message'=>'پترن پیامک تعیین نشده است.'),400); }
+        $raw_recipient = $type === 'user'
+            ? (string)rgar($entry, (string)$view->user_mobile_field_id)
+            : (string)$view->admin_mobile_numbers;
+        $numbers = preg_split('/[,;\\s]+/u', $raw_recipient, -1, PREG_SPLIT_NO_EMPTY);
+        $numbers = array_values(array_unique(array_filter($numbers,function($n){
+            return (bool)preg_match('/^(?:\\+98|0098|0)?9[0-9]{9}$/', $n);
+        })));
+        if (!$numbers || count($numbers)>10 || ($type === 'user' && count($numbers)!==1)) {
+            wp_send_json_error(array('message'=>'شماره گیرنده معتبر نیست؛ حداکثر ۱۰ شماره مجاز است.'),400);
         }
-        
-        // Get recipient information
-        $recipient = '';
-        if ($type === 'user' && !empty($view->user_mobile_field_id)) {
-            $recipient = rgar($entry, $view->user_mobile_field_id);
-            if (empty($recipient)) {
-                wp_send_json_error(array('message' => __('شماره موبایل کاربر یافت نشد', 'gravity-form-custom-view')));
-            }
-        } elseif ($type === 'admin' && !empty($view->admin_mobile_numbers)) {
-            $recipient = $view->admin_mobile_numbers;
-        } else {
-            wp_send_json_error(array('message' => __('شماره گیرنده تنظیم نشده است', 'gravity-form-custom-view')));
+        $params = $this->parse_kavenegar_pattern($pattern,$entry,$form);
+        if (empty($params['template']) || empty($params['token'])) {
+            wp_send_json_error(array('message'=>'نام پترن یا مقدار token تعریف نشده است.'),400);
         }
-        
-        // Parse the pattern to extract Kavenegar Lookup parameters
-        $lookup_params = $this->parse_kavenegar_pattern($pattern, $entry, $form);
-        
-        // Send SMS via Kavenegar API
-        $result = $this->send_kavenegar_lookup($view->kavenegar_api_key, $recipient, $lookup_params);
-        
-        if ($result['success']) {
-            wp_send_json_success(array('message' => __('پیامک با موفقیت ارسال شد', 'gravity-form-custom-view')));
-        } else {
-            wp_send_json_error(array('message' => $result['message']));
+        $lock = 'gfcv_sms_front_send_' . get_current_user_id();
+        if (get_transient($lock)) {
+            wp_send_json_error(array('message'=>'برای جلوگیری از ارسال تکراری، یک دقیقه فاصله بگذارید.'),429);
         }
+        set_transient($lock,1,MINUTE_IN_SECONDS);
+        $out = array();
+        foreach ($numbers as $n) {
+            $result = $this->send_kavenegar_lookup($view->kavenegar_api_key,$n,$params);
+            $out[] = array('number'=>$n,'success'=>!empty($result['success']),'message'=>$result['message']??'');
+        }
+        $success = count(array_filter($out,function($v){return $v['success'];})) === count($out);
+        if ($success) {
+            wp_send_json_success(array('message'=>'پیامک با موفقیت ارسال شد.','results'=>$out));
+        }
+        wp_send_json_error(array('message'=>'ارسال برای برخی گیرندگان ناموفق بود.','results'=>$out),502);
     }
-    
+
     /**
      * Parse Kavenegar pattern string to extract lookup parameters
      *
