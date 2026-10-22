@@ -97,6 +97,15 @@ class GFCV_Shortcode {
                 true
             );
             
+            // One request per recipient; enqueued only where the view shortcode exists.
+            wp_enqueue_script(
+                'gfcv-bulk-user-sms',
+                GFCV_PLUGIN_URL . 'assets/js/bulk-user-sms.js',
+                array('jquery', 'gfcv-frontend-scripts'),
+                GFCV_PLUGIN_VERSION,
+                true
+            );
+
             // Localize script
             wp_localize_script(
                 'gfcv-frontend-scripts',
@@ -104,6 +113,7 @@ class GFCV_Shortcode {
                 array(
                     'ajax_url' => admin_url('admin-ajax.php'),
                     'nonce' => wp_create_nonce('gfcv_nonce'),
+                    'bulk_sms_nonce' => wp_create_nonce('gfcv_bulk_user_sms'),
                     'loading_text' => __('در حال بارگذاری...', 'gravity-form-custom-view'),
                     'error_text' => __('خطا در بارگذاری اطلاعات', 'gravity-form-custom-view'),
                     'frontend_css_url' => GFCV_PLUGIN_URL . 'assets/css/frontend.css',

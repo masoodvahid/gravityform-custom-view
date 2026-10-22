@@ -206,5 +206,9 @@ $(function() {
     });
     $(window).on('hashchange',openServiceSettings);
     openServiceSettings();
+    // Direct links from the bulk-SMS completion notice open the report modal.
+    if (window.location.hash === '#gfcv-dashboard-outbox') {
+        openOutbox();
+    }
 });
 })(jQuery);
