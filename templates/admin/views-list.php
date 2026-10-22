@@ -54,6 +54,13 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
         </div>
     </section>
 
+    <?php if (GFCV_Kavenegar::get_key() === '') : ?>
+        <div class="notice notice-warning inline">
+            <p><strong>سرویس پیامک آماده نیست.</strong> کلید API سراسری کاوه‌نگار ثبت نشده است؛
+            ارسال پیامک تستی و دریافت گزارش تا ثبت آن امکان‌پذیر نیست.
+            <a href="#gfcv-service-settings">تنظیم کلید API</a></p>
+        </div>
+    <?php endif; ?>
     <?php if (isset($_GET['deleted'])) : ?>
         <div class="notice notice-success is-dismissible"><p>نمای سفارشی با موفقیت حذف شد.</p></div>
     <?php endif; ?>
