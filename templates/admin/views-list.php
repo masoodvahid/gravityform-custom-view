@@ -42,6 +42,11 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
             <p>لیست‌های متصل به فرم‌ها را از همین‌جا مدیریت کنید، کد کوتاه آن‌ها را بردارید و تنظیمات دسترسی و پیامک را ویرایش کنید.</p>
         </div>
         <div class="gfcv-dashboard-hero-actions">
+            <button type="button" id="gfcv-show-outbox" class="button button-secondary" aria-controls="gfcv-dashboard-outbox" aria-expanded="false">
+                <span class="dashicons dashicons-email-alt" aria-hidden="true"></span>
+                گزارش پیامک‌های ارسالی
+            </button>
+            <a href="#gfcv-service-settings" class="button button-secondary">تنظیمات پیامک</a>
             <a href="<?php echo esc_url($add_url); ?>" class="button button-primary gfcv-dashboard-create">
                 <span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
                 ایجاد لیست جدید
@@ -81,6 +86,53 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
                 <span class="gfcv-stat-label">لیست‌های دارای محدودیت کاربران</span>
                 <strong class="gfcv-stat-value"><?php echo esc_html(number_format_i18n($restricted_count)); ?></strong>
             </div>
+        </div>
+    </section>
+
+    <section class="gfcv-dashboard-outbox" id="gfcv-dashboard-outbox" hidden aria-labelledby="gfcv-outbox-heading">
+        <div class="gfcv-dashboard-outbox-head">
+            <div>
+                <h2 id="gfcv-outbox-heading">گزارش پیامک‌های ارسالی کاوه‌نگار</h2>
+                <p>گزارش از حساب کاوه‌نگار خوانده می‌شود و ممکن است شامل پیامک‌هایی خارج از این افزونه نیز باشد.</p>
+            </div>
+            <button type="button" id="gfcv-close-outbox" class="button button-secondary" aria-label="بستن گزارش پیامک‌ها">بستن</button>
+        </div>
+        <form id="gfcv-outbox-filters" class="gfcv-dashboard-outbox-toolbar">
+            <label>نوع گزارش
+                <select id="gfcv-outbox-mode" aria-label="نوع گزارش">
+                    <option value="latest">۱۰۰ پیامک اخیر</option>
+                    <option value="range">بازه تاریخ</option>
+                </select>
+            </label>
+            <label class="gfcv-outbox-range-field" hidden>از تاریخ میلادی
+                <input type="date" id="gfcv-outbox-from" autocomplete="off">
+            </label>
+            <label class="gfcv-outbox-range-field" hidden>تا تاریخ میلادی
+                <input type="date" id="gfcv-outbox-to" autocomplete="off">
+            </label>
+            <button type="submit" id="gfcv-fetch-outbox" class="button button-primary">نمایش گزارش</button>
+            <span class="description">بازه انتخابی حداکثر ۳۱ روز باشد.</span>
+        </form>
+        <div id="gfcv-outbox-status" class="gfcv-outbox-status" role="status" aria-live="polite"></div>
+        <div class="gfcv-outbox-scroll">
+            <table class="wp-list-table widefat" id="gfcv-outbox-table" hidden>
+                <thead>
+                    <tr>
+                        <th scope="col">شناسه پیامک</th>
+                        <th scope="col">تاریخ</th>
+                        <th scope="col">گیرنده</th>
+                        <th scope="col">فرستنده</th>
+                        <th scope="col">متن پیام</th>
+                        <th scope="col">وضعیت</th>
+                    </tr>
+                </thead>
+                <tbody id="gfcv-outbox-rows"></tbody>
+            </table>
+        </div>
+        <div class="gfcv-outbox-footer" id="gfcv-outbox-pagination" hidden>
+            <button type="button" class="button button-secondary" id="gfcv-outbox-prev">صفحه قبل</button>
+            <span id="gfcv-outbox-page-label" aria-live="polite"></span>
+            <button type="button" class="button button-secondary" id="gfcv-outbox-next">صفحه بعد</button>
         </div>
     </section>
 
@@ -210,10 +262,43 @@ $add_url = admin_url('admin.php?page=gf_custom_view&action=add');
         <?php endif; ?>
     </section>
 
-    <div class="gfcv-dashboard-settings-heading">
-        <h2>تنظیمات نمایش و چاپ</h2>
-        <p>تنظیمات فونت گزارش‌ها جدا از مدیریت لیست‌ها نگهداری می‌شود.</p>
+    <div class="gfcv-dashboard-settings-heading" id="gfcv-settings">
+        <h2>تنظیمات افزونه</h2>
+        <p>اتصال سرویس پیامک و فونت سفارشی گزارش‌ها در این بخش مدیریت می‌شوند.</p>
     </div>
+
+    <details class="gfcv-service-settings" id="gfcv-service-settings" <?php echo (isset($_GET['api_error']) || isset($_GET['api_updated']) || get_option(GFCV_Kavenegar::MIGRATION_KEY)==='conflict') ? 'open' : ''; ?>>
+        <summary><span class="dashicons dashicons-admin-settings" aria-hidden="true"></span> تنظیمات سرویس پیامک کاوه‌نگار</summary>
+        <div class="gfcv-service-settings-body">
+            <h3>کلید API مشترک تمام لیست‌ها</h3>
+            <p class="description">یک کلید API برای تمام لیست‌ها و ارسال‌های آزمایشی استفاده می‌شود. برای حفظ امنیت، کلید ثبت‌شده نمایش داده نمی‌شود.</p>
+            <?php if (get_option(GFCV_Kavenegar::MIGRATION_KEY)==='conflict' && GFCV_Kavenegar::get_key()==='') : ?>
+                <div class="notice notice-warning inline"><p>در نسخه‌های قبلی چند کلید متفاوت وجود داشته است. لطفاً کلید صحیح سراسری را وارد کنید؛ هیچ‌یک خودکار انتخاب نشده است.</p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['api_error'])) : ?>
+                <div class="notice notice-error inline"><p>ساختار کلید واردشده معتبر نیست. کلید API کاوه‌نگار را بررسی کنید.</p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['api_updated'])) : ?>
+                <div class="notice notice-success inline"><p>تنظیمات سراسری کاوه‌نگار ذخیره شد.</p></div>
+            <?php endif; ?>
+            <p class="gfcv-secret-state">
+                <span class="dashicons <?php echo GFCV_Kavenegar::get_key() !== '' ? 'dashicons-yes-alt' : 'dashicons-warning'; ?>" aria-hidden="true"></span>
+                <?php echo GFCV_Kavenegar::get_key() !== '' ? 'کلید API تنظیم شده است.' : 'هنوز کلید API ثبت نشده است.'; ?>
+            </p>
+            <form method="post">
+                <?php wp_nonce_field('gfcv_save_view','gfcv_nonce'); ?>
+                <input type="hidden" name="gfcv_action" value="save_kavenegar_settings">
+                <label for="gfcv_kavenegar_key"><strong>کلید جدید API کاوه‌نگار</strong></label>
+                <div class="gfcv-secret-row">
+                    <input type="password" id="gfcv_kavenegar_key" name="gfcv_kavenegar_key"
+                           autocomplete="new-password" placeholder="کلید جدید را برای ثبت یا جایگزینی وارد کنید">
+                    <button type="submit" class="button button-primary">ذخیره تنظیمات پیامک</button>
+                </div>
+                <p class="description">خالی‌گذاشتن این فیلد باعث حفظ کلید قبلی می‌شود.</p>
+                <label><input type="checkbox" name="gfcv_clear_kavenegar_key" value="1"> حذف کلید فعلی (ارسال پیامک و دریافت گزارش را غیرفعال می‌کند)</label>
+            </form>
+        </div>
+    </details>
 
     <details class="gfcv-font-accordion" <?php echo isset($_GET['font_error']) || isset($_GET['font_updated']) ? 'open' : ''; ?>>
         <summary><span class="dashicons dashicons-editor-textcolor" aria-hidden="true"></span> تنظیمات فونت سفارشی گزارش‌ها و چاپ</summary>
