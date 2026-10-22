@@ -101,7 +101,7 @@ class GFCV_SMS_Builder {
         if ($mobile_input !== '' && !$mobile) {
             wp_send_json_error(array('message'=>'شماره موبایل تستی معتبر نیست؛ نمونه: 09123456789.'),400);
         }
-        if ($view && $mobile && $pattern === $saved_pattern && $body === $saved_body && !empty($view->kavenegar_api_key) && $has_entry) {
+        if ($view && $mobile && $pattern === $saved_pattern && $body === $saved_body && !empty($view->kavenegar_api_key)) {
             $ticket = wp_generate_password(30, false, false);
             set_transient('gfcv_sms_preview_' . get_current_user_id() . '_' . $ticket, array(
                 'view_id'=>$view_id,'form_id'=>$form_id,'type'=>$type,'mobile'=>$mobile,
