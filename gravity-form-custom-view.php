@@ -2,8 +2,8 @@
 /**
  * Plugin Name: نمایش رکوردهای گرویتی فرم با تعیین سطح دسترسی
  * Description: ایجاد لیست قابل مدیریت در گرویتی فرم با توجه به سطح دسترسی کاربران
- * Plugin URI: https://rahkar-digital.ir
- * Version: 1.6.3
+ * Plugin URI: https://github.com/masoodvahid/gravityform-custom-view
+ * Version: 1.6.4
  * Update URI: https://github.com/masoodvahid/gravityform-custom-view
  * Author: مسعود وحید
  * Author URI: https://rahkar-digital.ir
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 define('GFCV_PLUGIN_FILE', __FILE__);
 define('GFCV_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('GFCV_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('GFCV_PLUGIN_VERSION', '1.6.3');
+define('GFCV_PLUGIN_VERSION', '1.6.4');
 
 // Check if Gravity Forms is active
 add_action('admin_init', 'gfcv_check_gravity_forms');
@@ -42,6 +42,7 @@ require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-db.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-admin.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-shortcode.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-sms-builder.php';
+require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-bulk-user-sms.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-kavenegar.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-conditional-details.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-github-updater.php';
@@ -62,6 +63,7 @@ function gfcv_init() {
     // Initialize shortcode
     GFCV_Shortcode::get_instance();
     GFCV_SMS_Builder::init();
+    GFCV_Bulk_User_SMS::init();
 }
 add_action('plugins_loaded', 'gfcv_init');
 
