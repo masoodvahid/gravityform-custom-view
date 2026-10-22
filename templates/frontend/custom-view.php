@@ -32,7 +32,8 @@ $offset = ($current_page - 1) * $per_page; // Still needed for row numbering
 $visible_field_ids = array_values(array_filter($field_ids, function($field_id) use ($fields) {
     return isset($fields[$field_id]);
 }));
-$column_count = count($visible_field_ids) + 4;
+$bulk_sms_allowed = current_user_can('manage_options') && !empty($view->user_sms_pattern);
+$column_count = count($visible_field_ids) + 4 + ($bulk_sms_allowed ? 1 : 0);
 $sms_actions_allowed = is_user_logged_in() && (
     current_user_can('manage_options') || is_super_admin() ||
     (!empty($view->user_access_ids) && in_array(
@@ -48,6 +49,15 @@ $sms_actions_allowed = is_user_logged_in() && (
             <h3 class="gfcv-list-title">لیست رکوردهای ثبت‌شده</h3>
             <div class="gfcv-list-subtitle">مشاهده و مدیریت اطلاعات ثبت‌شده در فرم</div>
         </div>
+        <?php if ($bulk_sms_allowed) : ?>
+            <div class="gfcv-bulk-toolbar">
+                <span class="gfcv-bulk-selection-status" aria-live="polite">هیچ رکوردی انتخاب نشده است</span>
+                <button type="button" class="gfcv-bulk-open" disabled>
+                    <span class="dashicons dashicons-email-alt" aria-hidden="true"></span>
+                    ارسال سریع پیامک کاربر
+                </button>
+            </div>
+        <?php endif; ?>
         <div class="gfcv-total-entries" role="status">
             <span class="gfcv-total-number"><?php echo esc_html(number_format_i18n($total_entries_for_pagination)); ?></span>
             <span>رکورد ثبت‌شده</span>
@@ -57,6 +67,12 @@ $sms_actions_allowed = is_user_logged_in() && (
         <table class="gfcv-table">
             <thead>
                 <tr>
+                    <?php if ($bulk_sms_allowed) : ?>
+                    <th class="gfcv-col-select" scope="col">
+                        <label class="screen-reader-text" for="gfcv-select-all-<?php echo esc_attr($view->id); ?>">انتخاب همه رکوردهای این صفحه</label>
+                        <input type="checkbox" class="gfcv-bulk-select-all" id="gfcv-select-all-<?php echo esc_attr($view->id); ?>" title="انتخاب همه رکوردهای این صفحه" aria-label="انتخاب همه رکوردهای این صفحه">
+                    </th>
+                    <?php endif; ?>
                     <th class="gfcv-col-num" scope="col">ردیف</th>
                     <th class="gfcv-col-id" scope="col">شناسه</th>
                     <?php foreach ($visible_field_ids as $field_id) : ?>
@@ -76,6 +92,12 @@ $sms_actions_allowed = is_user_logged_in() && (
                     <?php $row_number = $offset + 1; ?>
                     <?php foreach ($paged_entries as $entry) : ?>
                         <tr data-entry-id="<?php echo esc_attr($entry['id']); ?>">
+                            <?php if ($bulk_sms_allowed) : ?>
+                                <td class="gfcv-col-select">
+                                    <label class="screen-reader-text" for="gfcv-bulk-entry-<?php echo esc_attr($view->id); ?>-<?php echo esc_attr($entry['id']); ?>">انتخاب رکورد <?php echo esc_html($entry['id']); ?></label>
+                                    <input type="checkbox" class="gfcv-bulk-entry" id="gfcv-bulk-entry-<?php echo esc_attr($view->id); ?>-<?php echo esc_attr($entry['id']); ?>" value="<?php echo esc_attr($entry['id']); ?>" aria-label="انتخاب رکورد <?php echo esc_attr($entry['id']); ?>">
+                                </td>
+                            <?php endif; ?>
                             <td class="gfcv-col-num"><?php echo esc_html(number_format_i18n($row_number++)); ?></td>
                             <td class="gfcv-col-id"><span class="gfcv-id-pill"><?php echo esc_html($entry['id']); ?></span></td>
                             <?php foreach ($visible_field_ids as $field_id) : ?>
@@ -123,6 +145,50 @@ $sms_actions_allowed = is_user_logged_in() && (
         <span>برای مشاهده جزئیات، از ستون عملیات استفاده کنید.</span>
     </div>
 </div>
+
+<?php if ($bulk_sms_allowed) : ?>
+<div class="gfcv-bulk-modal gfcv-modal" data-view-id="<?php echo esc_attr($view->id); ?>" style="display:none" role="dialog" aria-modal="true" aria-labelledby="gfcv-bulk-title-<?php echo esc_attr($view->id); ?>">
+    <div class="gfcv-bulk-modal-content" tabindex="-1">
+        <div class="gfcv-bulk-modal-header">
+            <div>
+                <h2 id="gfcv-bulk-title-<?php echo esc_attr($view->id); ?>">ارسال سریع پیامک کاربر</h2>
+                <p>پیش‌نمایش پیامک برای افراد انتخاب‌شده</p>
+            </div>
+            <button type="button" class="gfcv-bulk-close" aria-label="بستن پنجره">&times;</button>
+        </div>
+        <div class="gfcv-bulk-modal-body">
+            <p class="gfcv-bulk-count" role="status">در حال بررسی رکوردها...</p>
+            <div class="gfcv-bulk-checks" aria-live="polite"></div>
+            <div class="gfcv-bulk-sample-wrap" hidden>
+                <h3>متن پیامک — نمونه یک نفر</h3>
+                <p class="gfcv-bulk-sample-meta"></p>
+                <div class="gfcv-bulk-sample" dir="rtl"></div>
+                <details class="gfcv-bulk-params">
+                    <summary>مشاهده مقادیر متغیرهای نمونه</summary>
+                    <pre dir="ltr"></pre>
+                </details>
+                <p class="gfcv-bulk-template-note" hidden>متن کامل پترن در تنظیمات وارد نشده است؛ مقادیر متغیرها نمایش داده می‌شوند، نه متن نهایی سرویس.</p>
+            </div>
+            <div class="gfcv-bulk-invalid" hidden></div>
+            <label class="gfcv-bulk-approve">
+                <input type="checkbox" class="gfcv-bulk-consent" disabled>
+                تأیید می‌کنم که پیامک برای تمام گیرندگان معتبر انتخاب‌شده ارسال شود و ممکن است هزینه داشته باشد.
+            </label>
+            <div class="gfcv-bulk-progress" aria-live="polite"></div>
+            <div class="gfcv-bulk-results" aria-live="polite"></div>
+            <p class="gfcv-bulk-report-link" hidden>
+                برای بررسی وضعیت پیامک‌های ارسالی به
+                <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view')); ?>" target="_blank" rel="noopener">مدیریت افزونه ← گزارش پیامک‌ها</a>
+                مراجعه کنید. پذیرش درخواست توسط کاوه‌نگار به معنی تحویل قطعی نیست.
+            </p>
+        </div>
+        <div class="gfcv-bulk-modal-footer">
+            <button type="button" class="gfcv-bulk-cancel">انصراف</button>
+            <button type="button" class="gfcv-bulk-submit" disabled>تأیید و ارسال</button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Modal Templates -->
 <div class="gfcv-modal" id="gfcv-modal-details" style="display: none;">
