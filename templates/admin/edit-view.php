@@ -23,7 +23,6 @@ $view_data = array(
     'user_sms_pattern' => 'token={40}token2={entry_id}token10={24}token20={1}template=fund-request',
     'admin_sms_template_text' => '',
     'user_sms_template_text' => '',
-    'kavenegar_api_key' => '',
     'send_to_api' => 0,
     'send_to_details' => '',
     'details_view_html' => '',
@@ -201,15 +200,7 @@ if ($is_edit) {
                     <?php $sms_builder_type = 'user'; include GFCV_PLUGIN_PATH . 'templates/admin/sms-builder.php'; ?>
                 </td>
             </tr>
-            <tr>
-                <th scope="row">
-                    <label for="kavenegar_api_key"><?php _e('کلید API کاوه‌نگار', 'gravity-form-custom-view'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="kavenegar_api_key" name="kavenegar_api_key" value="<?php echo esc_attr($view_data['kavenegar_api_key']); ?>" class="regular-text">
-                    <p class="description"><?php _e('کلید API حساب کاوه‌نگار را وارد کنید.', 'gravity-form-custom-view'); ?></p>
-                </td>
-            </tr>
+
             
             <tr>
                 <th scope="row">
