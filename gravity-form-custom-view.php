@@ -6,7 +6,7 @@
  * Version: 1.6.4
  * Update URI: https://github.com/masoodvahid/gravityform-custom-view
  * Author: مسعود وحید
- * Author URI: https://rahkar-digital.ir
+ * Author URI: https://github.com/masoodvahid/gravityform-custom-view
  * Text Domain: gravity-form-custom-view
  * License: GPL2
  * Requires PHP: 7.4
