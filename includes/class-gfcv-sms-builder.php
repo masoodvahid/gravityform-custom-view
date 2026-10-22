@@ -160,7 +160,9 @@ class GFCV_SMS_Builder {
         }
         // The test pattern may be new or still unsaved. We only trust the
         // reviewed one-time server snapshot, not fresh client-side parameters.
-        if (!class_exists('GFAPI') || !GFAPI::get_form((int)$ticket_data['form_id'])) {
+        $test_form = class_exists('GFAPI')
+            ? GFAPI::get_form((int)$ticket_data['form_id']) : false;
+        if (!$test_form || is_wp_error($test_form)) {
             wp_send_json_error(array('message'=>'فرم تست دیگر در دسترس نیست.'),400);
         }
         if (!empty($ticket_data['view_id'])) {
