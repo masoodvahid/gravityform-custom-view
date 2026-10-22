@@ -16,18 +16,60 @@ $(function(){
    $('#field_list .field-item').each(function(){$(this).toggleClass('is-selected',ids.includes(String($(this).data('field-id'))));});
  }
  function add(id){id=String(id||'');if(!/^\d+$/.test(id)||ids.includes(id))return;ids.push(id);render();}
- function fillPdfNameFields(options){
-   ['#pdf_first_name_field_id','#pdf_last_name_field_id'].forEach(function(selector){
-     const $field=$(selector);
+ function fillFormFieldSelectors(options, keepExisting){
+   const selectors=[
+     {selector:'#pdf_first_name_field_id',placeholder:'انتخاب فیلد نام'},
+     {selector:'#pdf_last_name_field_id',placeholder:'انتخاب فیلد نام خانوادگی'},
+     {selector:'#user_mobile_field_id',placeholder:'انتخاب فیلد شماره همراه'},
+     {selector:'#fallback_mobile_field_id',placeholder:'بدون فیلد جایگزین'}
+   ];
+   selectors.forEach(function(cfg){
+     const $field=$(cfg.selector);
      if(!$field.length)return;
-     const placeholder=selector.indexOf('first')!==-1?'انتخاب فیلد نام':'انتخاب فیلد نام خانوادگی';
-     $field.empty().append($('<option/>').val('').text(placeholder));
+     const current=keepExisting?$field.val():'';
+     $field.empty().append($('<option/>').val('').text(cfg.placeholder));
      (options||[]).forEach(function(option){
        $field.append($('<option/>').val(String(option.id)).text(option.id+' — '+option.label));
      });
-     $field.val('');
+     if(current){
+       // Preserve a configured ID even if Gravity Forms has since hidden or
+       // removed that input; the administrator can select another field.
+       if(!$field.find('option').filter(function(){return this.value===String(current);}).length){
+         $field.append($('<option/>').val(current).text(current+' — فیلد ذخیره‌شده (در فرم یافت نشد)'));
+       }
+       $field.val(current);
+     }else{
+       $field.val('');
+     }
    });
  }
+ // Only admins can query WordPress user profiles for saved ACL IDs.
+ let userLookupTimer=null, userLookupRequest=0;
+ function updateAllowedUserNames(){
+   const $input=$('#user_access_ids'),$output=$('#gfcv-allowed-user-names');
+   if(!$input.length||!$output.length)return;
+   const raw=$input.val().trim();
+   if(!raw){$output.empty();return;}
+   const nonce=$('#gfcv_nonce').val();
+   const requested=++userLookupRequest;
+   $output.text('در حال بررسی شناسه‌های کاربران...');
+   $.post(ajaxurl,{action:'gfcv_resolve_allowed_users',nonce:nonce,ids:raw})
+     .done(function(resp){
+       if(requested!==userLookupRequest)return;
+       $output.empty();
+       if(!resp||!resp.success){$output.text('دریافت مشخصات کاربران امکان‌پذیر نیست.');return;}
+       (resp.data.users||[]).forEach(function(user){
+         const text=String(user.id)+' — '+(user.found?user.name:'کاربر یافت نشد');
+         $('<span class="gfcv-allowed-user-chip"/>')
+           .toggleClass('is-missing',!user.found).text(text).appendTo($output);
+       });
+     })
+     .fail(function(){if(requested===userLookupRequest)$output.text('خطا در دریافت نام کاربران.');});
+ }
+ $('#user_access_ids').on('input',function(){
+   clearTimeout(userLookupTimer);
+   userLookupTimer=setTimeout(updateAllowedUserNames,350);
+ });
  function readFields(){
    names={};$select.empty().append($('<option value="">یک فیلد انتخاب کنید...</option>'));
    $('#field_list .field-item').each(function(){
@@ -42,11 +84,11 @@ $(function(){
  $('#gfcv_add_field').on('click',function(){add($select.val());$select.val('');});
  $(document).on('click','#field_list .field-item',function(){add($(this).data('field-id'));});
  $('#form_id').on('change',function(){
-   const formId=$(this).val();ids=[];render();fillPdfNameFields([]);
+   const formId=$(this).val();ids=[];render();fillFormFieldSelectors([],false);
    if(!formId){$('#field_list').html('<p>ابتدا فرم را انتخاب کنید.</p>');readFields();return;}
    $('#field_list').html('<p>در حال بارگذاری فیلدها...</p>');
    $.post(ajaxurl,{action:'gfcv_get_form_fields',form_id:formId,nonce:$('#gfcv_nonce').val()},function(resp){
-      if(resp&&resp.success){$('#field_list').html(resp.data.html);readFields();fillPdfNameFields(resp.data.pdf_fields||resp.data.fields||[]);$(document).trigger('gfcv:form-fields-loaded',[resp.data.pdf_fields||resp.data.fields||[]]);}
+      if(resp&&resp.success){$('#field_list').html(resp.data.html);readFields();fillFormFieldSelectors(resp.data.pdf_fields||resp.data.fields||[],false);$(document).trigger('gfcv:form-fields-loaded',[resp.data.pdf_fields||resp.data.fields||[]]);}
       else $('#field_list').text('خطا در دریافت فیلدهای فرم');
    }).fail(function(){$('#field_list').text('خطا در ارتباط با سرور');});
  });
