@@ -185,6 +185,10 @@ class GFCV_SMS_Builder {
         if (empty($result['success'])) {
             wp_send_json_error(array('message'=>$result['message'] ?? 'ارسال ناموفق بود.'),502);
         }
-        wp_send_json_success(array('message'=>'درخواست ارسال آزمایشی به ' . $ticket_data['mobile'] . ' توسط کاوه‌نگار پذیرفته شد. وضعیت تحویل را از گزارش سرویس بررسی کنید.'));
+        wp_send_json_success(array(
+            'message'=>'شماره مقصد: ' . $ticket_data['mobile'] . ' — ' .
+                (string)($result['message'] ?? 'درخواست ارسال توسط کاوه‌نگار ثبت شد.'),
+            'message_id'=>(string)($result['message_id'] ?? '')
+        ));
     }
 }
