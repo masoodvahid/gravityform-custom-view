@@ -3,7 +3,7 @@
  * Plugin Name: نمایش رکوردهای گرویتی فرم با تعیین سطح دسترسی
  * Description: ایجاد لیست قابل مدیریت در گرویتی فرم با توجه به سطح دسترسی کاربران
  * Plugin URI: https://rahkar-digital.ir
- * Version: 1.5.8
+ * Version: 1.5.9
  * Update URI: https://github.com/masoodvahid/gravityform-custom-view
  * Author: مسعود وحید
  * Author URI: https://rahkar-digital.ir
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 define('GFCV_PLUGIN_FILE', __FILE__);
 define('GFCV_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('GFCV_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('GFCV_PLUGIN_VERSION', '1.5.8');
+define('GFCV_PLUGIN_VERSION', '1.5.9');
 
 // Check if Gravity Forms is active
 add_action('admin_init', 'gfcv_check_gravity_forms');
@@ -34,13 +34,14 @@ function gfcv_check_gravity_forms() {
 }
 
 function gfcv_gravity_forms_notice() {
-    echo '<div class="error"><p>' . __('Gravity Forms Results Custom View with ACL requires Gravity Forms to be installed and activated.', 'gravity-form-custom-view') . '</p></div>';
+    echo '<div class="error"><p>' . __('برای استفاده از افزونه نمایش رکوردها، باید Gravity Forms فعال باشد.', 'gravity-form-custom-view') . '</p></div>';
 }
 
 // Include required files
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-db.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-admin.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-shortcode.php';
+require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-sms-builder.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-conditional-details.php';
 require_once GFCV_PLUGIN_PATH . 'includes/class-gfcv-github-updater.php';
 GFCV_GitHub_Updater::init();
@@ -56,6 +57,7 @@ function gfcv_init() {
     
     // Initialize shortcode
     GFCV_Shortcode::get_instance();
+    GFCV_SMS_Builder::init();
 }
 add_action('plugins_loaded', 'gfcv_init');
 
@@ -81,7 +83,7 @@ function gfcv_admin_notices() {
     }
     
     echo '<div class="notice notice-info is-dismissible gfcv-button-notice">
-        <p>' . __('Gravity Forms Custom View buttons can now be customized! Check the docs/button-customization.md file for instructions.', 'gravity-form-custom-view') . '</p>
+        <p>' . __('استایل دکمه‌های افزونه از طریق فایل CSS اختصاصی قابل شخصی‌سازی است.', 'gravity-form-custom-view') . '</p>
     </div>';
     
     // Add script to handle notice dismissal

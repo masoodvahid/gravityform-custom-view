@@ -33,6 +33,14 @@ $visible_field_ids = array_values(array_filter($field_ids, function($field_id) u
     return isset($fields[$field_id]);
 }));
 $column_count = count($visible_field_ids) + 4;
+$sms_actions_allowed = is_user_logged_in() && (
+    current_user_can('manage_options') || is_super_admin() ||
+    (!empty($view->user_access_ids) && in_array(
+        get_current_user_id(),
+        array_map('intval', explode(',', (string)$view->user_access_ids)),
+        true
+    ))
+);
 ?>
 <div class="gfcv-container" data-view-id="<?php echo esc_attr($view->id); ?>" dir="rtl">
     <div class="gfcv-list-topbar">
@@ -93,10 +101,10 @@ $column_count = count($visible_field_ids) + 4;
                             <td class="gfcv-actions">
                                 <div class="gfcv-action-group">
                                     <button type="button" class="gfcv-btn gfcv-btn-details" title="مشاهده جزئیات" aria-label="مشاهده جزئیات رکورد <?php echo esc_attr($entry['id']); ?>"><span class="dashicons dashicons-visibility" aria-hidden="true"></span></button>
-                                    <?php if (!empty($view->user_sms_pattern)) : ?>
+                                    <?php if ($sms_actions_allowed && !empty($view->user_sms_pattern)) : ?>
                                         <button type="button" class="gfcv-btn gfcv-btn-user-sms" title="پیامک کاربر" aria-label="پیامک کاربر برای رکورد <?php echo esc_attr($entry['id']); ?>"><span class="dashicons dashicons-email" aria-hidden="true"></span></button>
                                     <?php endif; ?>
-                                    <?php if (!empty($view->admin_sms_pattern)) : ?>
+                                    <?php if ($sms_actions_allowed && !empty($view->admin_sms_pattern)) : ?>
                                         <button type="button" class="gfcv-btn gfcv-btn-admin-sms" title="پیامک مدیر" aria-label="پیامک مدیر برای رکورد <?php echo esc_attr($entry['id']); ?>"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span></button>
                                     <?php endif; ?>
                                     <?php if (!empty($view->send_to_api)) : ?>
@@ -132,7 +140,7 @@ $column_count = count($visible_field_ids) + 4;
 
 <div class="gfcv-modal" id="gfcv-modal-sms" style="display: none;">
     <div class="gfcv-modal-content">
-        <span class="gfcv-modal-close">&times;</span>
+        <button type="button" class="gfcv-modal-close" aria-label="بستن پنجره">&times;</button>
         <h2 class="gfcv-modal-title"></h2>
         <div class="gfcv-modal-body"></div>
         <div class="gfcv-modal-footer">
@@ -144,7 +152,7 @@ $column_count = count($visible_field_ids) + 4;
 <div class="gfcv-modal" id="gfcv-modal-api" style="display: none;">
     <div class="gfcv-modal-content">
         <span class="gfcv-modal-close">&times;</span>
-        <h2><?php _e('API Data', 'gravity-form-custom-view'); ?></h2>
+        <h2><?php _e('اطلاعات ارتباط با API', 'gravity-form-custom-view'); ?></h2>
         <div class="gfcv-modal-body">
             <pre class="gfcv-json-data"></pre>
         </div>

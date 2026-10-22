@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 $is_edit = isset($view) && $view;
-$title = $is_edit ? __('Edit Custom View', 'gravity-form-custom-view') : __('Add New Custom View', 'gravity-form-custom-view');
+$title = $is_edit ? __('ویرایش نمای سفارشی', 'gravity-form-custom-view') : __('افزودن نمای سفارشی', 'gravity-form-custom-view');
 
 // Set default values
 $view_data = array(
@@ -21,6 +21,8 @@ $view_data = array(
     'field_ids' => '',
     'admin_sms_pattern' => 'token={5}token2={entry_id}-{40}token10={1}-{24}token20=درخواست سرمایهtemplate=admin-notify',
     'user_sms_pattern' => 'token={40}token2={entry_id}token10={24}token20={1}template=fund-request',
+    'admin_sms_template_text' => '',
+    'user_sms_template_text' => '',
     'kavenegar_api_key' => '',
     'send_to_api' => 0,
     'send_to_details' => '',
@@ -48,13 +50,13 @@ if ($is_edit) {
     
     <?php if (isset($_GET['updated'])) : ?>
     <div class="notice notice-success is-dismissible">
-        <p><?php _e('Custom view updated.', 'gravity-form-custom-view'); ?></p>
+        <p><?php _e('تغییرات نما ذخیره شد.', 'gravity-form-custom-view'); ?></p>
     </div>
     <?php endif; ?>
     
     <?php if (isset($_GET['created'])) : ?>
     <div class="notice notice-success is-dismissible">
-        <p><?php _e('Custom view created.', 'gravity-form-custom-view'); ?></p>
+        <p><?php _e('نمای سفارشی ایجاد شد.', 'gravity-form-custom-view'); ?></p>
     </div>
     <?php endif; ?>
     
@@ -66,7 +68,7 @@ if ($is_edit) {
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="view_title"><?php _e('View Title', 'gravity-form-custom-view'); ?></label>
+                    <label for="view_title"><?php _e('عنوان نمای سفارشی', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="view_title" name="view_title" value="<?php echo esc_attr($view_data['view_title']); ?>" class="regular-text" required>
@@ -75,18 +77,18 @@ if ($is_edit) {
             
             <tr>
                 <th scope="row">
-                    <label for="form_id"><?php _e('Form', 'gravity-form-custom-view'); ?></label>
+                    <label for="form_id"><?php _e('فرم گرویتی', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <select id="form_id" name="form_id" required>
-                        <option value=""><?php _e('Select a form', 'gravity-form-custom-view'); ?></option>
+                        <option value=""><?php _e('انتخاب فرم', 'gravity-form-custom-view'); ?></option>
                         <?php foreach ($forms as $form) : ?>
                             <option value="<?php echo esc_attr($form['id']); ?>" <?php selected($view_data['form_id'], $form['id']); ?>>
                                 <?php echo esc_html($form['title']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <p class="description"><?php _e('Select the Gravity Form to use for this view.', 'gravity-form-custom-view'); ?></p>
+                    <p class="description"><?php _e('فرمی را که رکوردهایش در این نما نمایش داده می‌شوند انتخاب کنید.', 'gravity-form-custom-view'); ?></p>
                 </td>
             </tr>
             
@@ -153,7 +155,7 @@ if ($is_edit) {
 
             <tr>
                 <th scope="row">
-                    <label for="field_ids"><?php _e('Field IDs to Display', 'gravity-form-custom-view'); ?></label>
+                    <label for="field_ids"><?php _e('فیلدهای جدول رکوردها', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="field_ids" name="field_ids" value="<?php echo esc_attr($view_data['field_ids']); ?>">
@@ -192,113 +194,94 @@ if ($is_edit) {
                 <label class="gfcv-setting"><input type="checkbox" name="respect_conditional_logic" value="1" <?php checked($view_data['respect_conditional_logic'], 1); ?>> نمایش فیلدهای شرطی فقط در صورت برقراری شرط</label>
                 <p class="description">این گزینه برای قالب‌های جزئیات دارای data-gf-field کار می‌کند.</p>
             </td></tr>
-            <tr>
-                <th scope="row">
-                    <label for="admin_sms_pattern"><?php _e('Admin SMS Pattern', 'gravity-form-custom-view'); ?></label>
-                </th>
+            <tr class="gfcv-sms-settings-row">
+                <th scope="row">تنظیمات پیامک‌های الگو</th>
                 <td>
-                    <textarea id="admin_sms_pattern" name="admin_sms_pattern" rows="5" class="large-text"><?php echo esc_textarea($view_data['admin_sms_pattern']); ?></textarea>
-                    <p class="description"><?php _e('Enter the SMS pattern for admin. Use {field_id} to include form field values (e.g., {1} for field with ID 1).', 'gravity-form-custom-view'); ?></p>
+                    <?php $sms_builder_type = 'admin'; include GFCV_PLUGIN_PATH . 'templates/admin/sms-builder.php'; ?>
+                    <?php $sms_builder_type = 'user'; include GFCV_PLUGIN_PATH . 'templates/admin/sms-builder.php'; ?>
                 </td>
             </tr>
-            
             <tr>
                 <th scope="row">
-                    <label for="user_sms_pattern"><?php _e('User SMS Pattern', 'gravity-form-custom-view'); ?></label>
-                </th>
-                <td>
-                    <textarea id="user_sms_pattern" name="user_sms_pattern" rows="5" class="large-text"><?php echo esc_textarea($view_data['user_sms_pattern']); ?></textarea>
-                    <p class="description"><?php _e('Enter the SMS pattern for users. Use {field_id} to include form field values.', 'gravity-form-custom-view'); ?></p>
-                </td>
-            </tr>
-            
-            <tr>
-                <th scope="row">
-                    <label for="kavenegar_api_key"><?php _e('Kavenegar API Key', 'gravity-form-custom-view'); ?></label>
+                    <label for="kavenegar_api_key"><?php _e('کلید API کاوه‌نگار', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="kavenegar_api_key" name="kavenegar_api_key" value="<?php echo esc_attr($view_data['kavenegar_api_key']); ?>" class="regular-text">
-                    <p class="description"><?php _e('Enter your Kavenegar API key for SMS functionality.', 'gravity-form-custom-view'); ?></p>
+                    <p class="description"><?php _e('کلید API حساب کاوه‌نگار را وارد کنید.', 'gravity-form-custom-view'); ?></p>
                 </td>
             </tr>
             
             <tr>
                 <th scope="row">
-                    <label for="send_to_api"><?php _e('Send to API', 'gravity-form-custom-view'); ?></label>
+                    <label for="send_to_api"><?php _e('ارسال به API', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <input type="checkbox" id="send_to_api" name="send_to_api" value="1" <?php checked($view_data['send_to_api'], 1); ?>>
-                    <label for="send_to_api"><?php _e('Enable API integration', 'gravity-form-custom-view'); ?></label>
+                    <label for="send_to_api"><?php _e('فعال‌سازی ارتباط با API', 'gravity-form-custom-view'); ?></label>
                 </td>
             </tr>
             
             <tr>
                 <th scope="row">
-                    <label for="send_to_details"><?php _e('Send to API Details', 'gravity-form-custom-view'); ?></label>
+                    <label for="send_to_details"><?php _e('تنظیمات ارسال به API', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <textarea id="send_to_details" name="send_to_details" rows="8" class="large-text code"><?php echo esc_textarea($view_data['send_to_details']); ?></textarea>
-                    <p class="description"><?php _e('Enter API integration details. Use {field_id} to include form field values.', 'gravity-form-custom-view'); ?></p>
+                    <p class="description"><?php _e('جزئیات درخواست API را وارد کنید. برای داده‌ها از شناسه فیلد مانند {1} استفاده کنید.', 'gravity-form-custom-view'); ?></p>
                 </td>
             </tr>
             
             <tr>
                 <th scope="row">
-                    <label for="details_view_html"><?php _e('Details View HTML', 'gravity-form-custom-view'); ?></label>
+                    <label for="details_view_html"><?php _e('قالب HTML نمایش جزئیات', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <textarea id="details_view_html" name="details_view_html" rows="10" class="large-text code"><?php echo esc_textarea($view_data['details_view_html']); ?></textarea>
-                    <p class="description"><?php _e('Enter HTML for the details view. Use {field_id} to include form field values.', 'gravity-form-custom-view'); ?></p>
+                    <p class="description"><?php _e('ساختار HTML نمایش جزئیات را وارد کنید. از {field_id} برای مقادیر فرم استفاده کنید.', 'gravity-form-custom-view'); ?></p>
                 </td>
             </tr>
             
             <tr>
                 <th scope="row">
-                    <label for="user_access_ids"><?php _e('User Access IDs', 'gravity-form-custom-view'); ?></label>
+                    <label for="user_access_ids"><?php _e('شناسه کاربران مجاز', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="user_access_ids" name="user_access_ids" value="<?php echo esc_attr($view_data['user_access_ids']); ?>" class="regular-text">
-                    <p class="description"><?php _e('Enter comma-separated user IDs who can access this view. Leave empty for public access.', 'gravity-form-custom-view'); ?></p>
+                    <p class="description"><?php _e('شناسه کاربران مجاز را با ویرگول جدا کنید؛ خالی بودن یعنی عدم اعمال محدودیت کاربران.', 'gravity-form-custom-view'); ?></p>
                 </td>
             </tr>
             
             <tr>
                 <th scope="row">
-                    <label for="user_mobile_field_id"><?php _e('User Mobile Field ID', 'gravity-form-custom-view'); ?></label>
+                    <label for="user_mobile_field_id"><?php _e('شناسه فیلد موبایل کاربر', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="user_mobile_field_id" name="user_mobile_field_id" value="<?php echo esc_attr(isset($view_data['user_mobile_field_id']) ? $view_data['user_mobile_field_id'] : ''); ?>" class="regular-text">
-                    <p class="description"><?php _e('Enter the field ID that contains the user mobile number (e.g., 5).', 'gravity-form-custom-view'); ?></p>
+                    <p class="description"><?php _e('شناسه فیلدی که شماره موبایل کاربر در آن ذخیره شده است (مانند ۵).', 'gravity-form-custom-view'); ?></p>
                 </td>
             </tr>
             
             <tr>
                 <th scope="row">
-                    <label for="admin_mobile_numbers"><?php _e('Admin Mobile Numbers', 'gravity-form-custom-view'); ?></label>
+                    <label for="admin_mobile_numbers"><?php _e('شماره‌های موبایل مدیران', 'gravity-form-custom-view'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="admin_mobile_numbers" name="admin_mobile_numbers" value="<?php echo esc_attr(isset($view_data['admin_mobile_numbers']) ? $view_data['admin_mobile_numbers'] : ''); ?>" class="regular-text">
-                    <p class="description"><?php _e('Enter comma-separated admin mobile numbers to receive SMS notifications.', 'gravity-form-custom-view'); ?></p>
+                    <p class="description"><?php _e('شماره‌های مدیران را با ویرگول جدا کنید.', 'gravity-form-custom-view'); ?></p>
                 </td>
             </tr>
-            <?php if ($is_edit) : ?>
-            <tr><th scope="row">تست سامانه پیامک</th><td>
-                <button type="button" class="button button-secondary" id="gfcv_test_sms">پیش‌نمایش و تست پیامک مدیر</button>
-                <p class="description">از آخرین رکورد فرم برای ساخت پیامک استفاده می‌شود؛ ارسال فقط پس از تأیید به شماره‌های ذخیره‌شده مدیران انجام خواهد شد.</p>
-                <div id="gfcv_sms_test_result" aria-live="polite"></div>
-            </td></tr>
-            <?php endif; ?>
+
         </table>
         
         <?php if ($is_edit) : ?>
-            <h2><?php _e('Shortcode', 'gravity-form-custom-view'); ?></h2>
-            <p><?php _e('Use this shortcode to display the custom view on your site:', 'gravity-form-custom-view'); ?></p>
+            <h2><?php _e('کد کوتاه', 'gravity-form-custom-view'); ?></h2>
+            <p><?php _e('برای نمایش لیست در سایت از کد کوتاه زیر استفاده کنید:', 'gravity-form-custom-view'); ?></p>
             <p><code>[gf-custom-view id=<?php echo esc_html($view_data['id']); ?>]</code></p>
         <?php endif; ?>
         
         <p class="submit">
-            <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo $is_edit ? esc_attr__('Update Custom View', 'gravity-form-custom-view') : esc_attr__('Create Custom View', 'gravity-form-custom-view'); ?>">
-            <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view')); ?>" class="button"><?php _e('Cancel', 'gravity-form-custom-view'); ?></a>
+            <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php echo $is_edit ? esc_attr__('ذخیره تغییرات نمای سفارشی', 'gravity-form-custom-view') : esc_attr__('ایجاد نمای سفارشی', 'gravity-form-custom-view'); ?>">
+            <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view')); ?>" class="button"><?php _e('انصراف', 'gravity-form-custom-view'); ?></a>
         </p>
     </form>
 </div>
