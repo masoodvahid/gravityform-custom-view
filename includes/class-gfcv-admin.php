@@ -98,6 +98,13 @@ class GFCV_Admin {
             true
         );
         wp_localize_script('gfcv-admin-scripts', 'gfcvAdminData', array('smsNonce' => wp_create_nonce('gfcv_test_sms'), 'builderNonce' => wp_create_nonce('gfcv_sms_builder')));
+        wp_enqueue_script(
+            'gfcv-sms-builder',
+            GFCV_PLUGIN_URL . 'assets/js/sms-builder.js',
+            array('jquery', 'gfcv-admin-scripts'),
+            GFCV_PLUGIN_VERSION,
+            true
+        );
     }
 
     /**
