@@ -1,81 +1,219 @@
 <?php
 /**
- * Admin template for displaying the list of custom views
+ * Main WordPress administration overview for custom Gravity Forms views.
  *
  * @package Gravity_Form_Custom_View
  */
-
-// Exit if accessed directly
 if (!defined('ABSPATH')) {
     exit;
 }
+
+$form_lookup = array();
+foreach ((array) $forms as $form) {
+    if (isset($form['id'])) {
+        $form_lookup[(int) $form['id']] = (string) ($form['title'] ?? '');
+    }
+}
+
+$view_count = count((array) $views);
+$used_form_ids = array();
+$sms_count = 0;
+$restricted_count = 0;
+foreach ((array) $views as $view_item) {
+    $used_form_ids[(int) $view_item->form_id] = true;
+    if (!empty($view_item->admin_sms_pattern) || !empty($view_item->user_sms_pattern)) {
+        $sms_count++;
+    }
+    if (!empty($view_item->user_access_ids)) {
+        $restricted_count++;
+    }
+}
+$used_form_count = count($used_form_ids);
+$add_url = admin_url('admin.php?page=gf_custom_view&action=add');
 ?>
-<div class="wrap gfcv-admin-wrap" dir="rtl">
-    <h1 class="wp-heading-inline"><?php _e('لیست‌های نمایشی گرویتی فرم', 'gravity-form-custom-view'); ?></h1>
-    <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view&action=add')); ?>" class="page-title-action"><?php _e('افزودن لیست جدید', 'gravity-form-custom-view'); ?></a>
-    <hr class="wp-header-end">
-    
+<div class="wrap gfcv-admin-wrap gfcv-dashboard" dir="rtl">
+    <section class="gfcv-dashboard-hero" aria-labelledby="gfcv-dashboard-title">
+        <div class="gfcv-dashboard-hero-copy">
+            <div class="gfcv-dashboard-kicker">
+                <span class="dashicons dashicons-forms" aria-hidden="true"></span>
+                مدیریت نمایش رکوردهای گرویتی فرم
+            </div>
+            <h1 id="gfcv-dashboard-title">لیست‌های نمایشی</h1>
+            <p>لیست‌های متصل به فرم‌ها را از همین‌جا مدیریت کنید، کد کوتاه آن‌ها را بردارید و تنظیمات دسترسی و پیامک را ویرایش کنید.</p>
+        </div>
+        <div class="gfcv-dashboard-hero-actions">
+            <a href="<?php echo esc_url($add_url); ?>" class="button button-primary gfcv-dashboard-create">
+                <span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
+                ایجاد لیست جدید
+            </a>
+        </div>
+    </section>
+
     <?php if (isset($_GET['deleted'])) : ?>
-    <div class="notice notice-success is-dismissible">
-        <p><?php _e('نمای سفارشی حذف شد.', 'gravity-form-custom-view'); ?></p>
-    </div>
+        <div class="notice notice-success is-dismissible"><p>نمای سفارشی با موفقیت حذف شد.</p></div>
     <?php endif; ?>
-    
-    <table class="wp-list-table widefat fixed striped gfcv-views-table">
-        <thead>
-            <tr>
-                <th><?php _e('شناسه', 'gravity-form-custom-view'); ?></th>
-                <th><?php _e('عنوان لیست', 'gravity-form-custom-view'); ?></th>
-                <th><?php _e('فرم', 'gravity-form-custom-view'); ?></th>
-                <th><?php _e('کد کوتاه', 'gravity-form-custom-view'); ?></th>
-                <th><?php _e('تاریخ ایجاد', 'gravity-form-custom-view'); ?></th>
-                <th><?php _e('عملیات', 'gravity-form-custom-view'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($views)) : ?>
-            <tr>
-                <td colspan="6"><?php _e('هنوز هیچ لیستی ایجاد نشده است.', 'gravity-form-custom-view'); ?></td>
-            </tr>
-            <?php else : ?>
-                <?php foreach ($views as $view) : ?>
-                <?php 
-                $form_name = '';
-                foreach ($forms as $form) {
-                    if ($form['id'] == $view->form_id) {
-                        $form_name = $form['title'];
-                        break;
-                    }
-                }
-                ?>
-                <tr>
-                    <td><?php echo esc_html($view->id); ?></td>
-                    <td>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view&action=edit&view_id=' . $view->id)); ?>">
-                            <?php echo esc_html($view->view_title); ?>
-                        </a>
-                    </td>
-                    <td><?php echo esc_html($form_name); ?></td>
-                    <td><code>[gf-custom-view id=<?php echo esc_html($view->id); ?>]</code></td>
-                    <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($view->date_created))); ?></td>
-                    <td>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=gf_custom_view&action=edit&view_id=' . $view->id)); ?>" class="button button-small">
-                            <?php _e('ویرایش', 'gravity-form-custom-view'); ?>
-                        </a>
-                        <form method="post" style="display:inline;" onsubmit="return confirm('<?php _e('آیا از حذف این لیست اطمینان دارید؟', 'gravity-form-custom-view'); ?>')">
-                            <?php wp_nonce_field('gfcv_save_view', 'gfcv_nonce'); ?>
-                            <input type="hidden" name="gfcv_action" value="delete_view">
-                            <input type="hidden" name="view_id" value="<?php echo esc_attr($view->id); ?>">
-                            <button type="submit" class="button button-small button-link-delete">
-                                <?php _e('حذف', 'gravity-form-custom-view'); ?>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+
+    <section class="gfcv-dashboard-stats" aria-label="آمار لیست‌های نمایشی">
+        <div class="gfcv-stat-card">
+            <span class="gfcv-stat-icon" aria-hidden="true"><span class="dashicons dashicons-list-view"></span></span>
+            <div class="gfcv-stat-content">
+                <span class="gfcv-stat-label">لیست‌های ایجادشده</span>
+                <strong class="gfcv-stat-value"><?php echo esc_html(number_format_i18n($view_count)); ?></strong>
+            </div>
+        </div>
+        <div class="gfcv-stat-card">
+            <span class="gfcv-stat-icon" aria-hidden="true"><span class="dashicons dashicons-feedback"></span></span>
+            <div class="gfcv-stat-content">
+                <span class="gfcv-stat-label">فرم‌های متصل</span>
+                <strong class="gfcv-stat-value"><?php echo esc_html(number_format_i18n($used_form_count)); ?></strong>
+            </div>
+        </div>
+        <div class="gfcv-stat-card">
+            <span class="gfcv-stat-icon" aria-hidden="true"><span class="dashicons dashicons-email-alt"></span></span>
+            <div class="gfcv-stat-content">
+                <span class="gfcv-stat-label">لیست‌های دارای الگوی پیامک</span>
+                <strong class="gfcv-stat-value"><?php echo esc_html(number_format_i18n($sms_count)); ?></strong>
+            </div>
+        </div>
+        <div class="gfcv-stat-card">
+            <span class="gfcv-stat-icon" aria-hidden="true"><span class="dashicons dashicons-lock"></span></span>
+            <div class="gfcv-stat-content">
+                <span class="gfcv-stat-label">لیست‌های دارای محدودیت کاربران</span>
+                <strong class="gfcv-stat-value"><?php echo esc_html(number_format_i18n($restricted_count)); ?></strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="gfcv-dashboard-list-panel" aria-labelledby="gfcv-views-heading">
+        <div class="gfcv-dashboard-panel-head">
+            <div>
+                <h2 id="gfcv-views-heading">مدیریت لیست‌ها</h2>
+                <p>برای ویرایش تنظیمات هر لیست، عنوان آن را انتخاب کنید.</p>
+            </div>
+            <span class="gfcv-dashboard-result-count" aria-live="polite">
+                <span id="gfcv-visible-count"><?php echo esc_html(number_format_i18n($view_count)); ?></span> لیست
+            </span>
+        </div>
+
+        <?php if ($view_count > 0) : ?>
+            <div class="gfcv-dashboard-toolbar">
+                <div class="gfcv-dashboard-search">
+                    <span class="dashicons dashicons-search" aria-hidden="true"></span>
+                    <label class="screen-reader-text" for="gfcv-view-search">جست‌وجو در لیست‌ها</label>
+                    <input type="search" id="gfcv-view-search" placeholder="جست‌وجوی عنوان، فرم یا شناسه..." autocomplete="off">
+                </div>
+                <div class="gfcv-dashboard-filters" role="group" aria-label="فیلتر فهرست">
+                    <button type="button" class="gfcv-filter-button is-active" data-filter="all" aria-pressed="true">همه</button>
+                    <button type="button" class="gfcv-filter-button" data-filter="sms" aria-pressed="false">دارای پیامک</button>
+                    <button type="button" class="gfcv-filter-button" data-filter="restricted" aria-pressed="false">دسترسی محدود</button>
+                </div>
+            </div>
+
+            <div class="gfcv-dashboard-table-scroll" tabindex="0" role="region" aria-label="جدول لیست‌های نمایشی، قابل پیمایش افقی">
+                <table class="wp-list-table widefat gfcv-views-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="gfcv-table-name">لیست نمایشی</th>
+                            <th scope="col">فرم مرتبط</th>
+                            <th scope="col">کد کوتاه</th>
+                            <th scope="col">سطح دسترسی</th>
+                            <th scope="col">تاریخ ایجاد</th>
+                            <th scope="col" class="gfcv-table-actions">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($views as $view) :
+                            $form_id = (int) $view->form_id;
+                            $form_name = isset($form_lookup[$form_id]) && $form_lookup[$form_id] !== ''
+                                ? $form_lookup[$form_id] : 'فرم شماره ' . $form_id;
+                            $has_sms = !empty($view->admin_sms_pattern) || !empty($view->user_sms_pattern);
+                            $is_restricted = !empty($view->user_access_ids);
+                            $shortcode = '[gf-custom-view id=' . absint($view->id) . ']';
+                            $edit_url = admin_url('admin.php?page=gf_custom_view&action=edit&view_id=' . absint($view->id));
+                            $search_terms = implode(' ', array($view->view_title, $form_name, (string) $form_id, (string) $view->id));
+                        ?>
+                            <tr class="gfcv-dashboard-view-row"
+                                data-search="<?php echo esc_attr($search_terms); ?>"
+                                data-has-sms="<?php echo $has_sms ? '1' : '0'; ?>"
+                                data-is-restricted="<?php echo $is_restricted ? '1' : '0'; ?>">
+                                <td data-label="لیست نمایشی">
+                                    <div class="gfcv-view-main">
+                                        <span class="gfcv-view-avatar" aria-hidden="true"><span class="dashicons dashicons-media-text"></span></span>
+                                        <div class="gfcv-view-summary">
+                                            <a class="gfcv-view-title" href="<?php echo esc_url($edit_url); ?>"><?php echo esc_html($view->view_title); ?></a>
+                                            <div class="gfcv-view-meta">
+                                                <span>شناسه <?php echo esc_html(number_format_i18n($view->id)); ?></span>
+                                                <?php if ($has_sms) : ?>
+                                                    <span class="gfcv-view-dot" aria-hidden="true">·</span>
+                                                    <span>الگوی پیامک دارد</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="فرم مرتبط">
+                                    <span class="gfcv-form-name"><?php echo esc_html($form_name); ?></span>
+                                    <span class="gfcv-form-id">شناسه فرم: <?php echo esc_html(number_format_i18n($form_id)); ?></span>
+                                </td>
+                                <td data-label="کد کوتاه">
+                                    <div class="gfcv-shortcode-field">
+                                        <code dir="ltr"><?php echo esc_html($shortcode); ?></code>
+                                        <button type="button" class="gfcv-shortcode-copy" data-shortcode="<?php echo esc_attr($shortcode); ?>" aria-label="کپی کد کوتاه <?php echo esc_attr($view->view_title); ?>" title="کپی کد کوتاه">
+                                            <span class="dashicons dashicons-admin-page" aria-hidden="true"></span>
+                                            <span class="gfcv-copy-text">کپی</span>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td data-label="سطح دسترسی">
+                                    <?php if ($is_restricted) : ?>
+                                        <span class="gfcv-access-tag gfcv-access-restricted"><span class="dashicons dashicons-lock" aria-hidden="true"></span> محدود</span>
+                                    <?php else : ?>
+                                        <span class="gfcv-access-tag gfcv-access-public"><span class="dashicons dashicons-unlock" aria-hidden="true"></span> عمومی</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="تاریخ ایجاد" class="gfcv-created-at">
+                                    <?php echo esc_html(date_i18n(get_option('date_format'), strtotime($view->date_created))); ?>
+                                </td>
+                                <td data-label="عملیات">
+                                    <div class="gfcv-view-actions">
+                                        <a class="button button-secondary gfcv-edit-action" href="<?php echo esc_url($edit_url); ?>">
+                                            <span class="dashicons dashicons-edit" aria-hidden="true"></span> ویرایش
+                                        </a>
+                                        <form method="post" class="gfcv-delete-view-form" data-confirm="<?php echo esc_attr('آیا از حذف لیست «' . $view->view_title . '» اطمینان دارید؟ این کار قابل بازگشت نیست.'); ?>">
+                                            <?php wp_nonce_field('gfcv_save_view', 'gfcv_nonce'); ?>
+                                            <input type="hidden" name="gfcv_action" value="delete_view">
+                                            <input type="hidden" name="view_id" value="<?php echo esc_attr($view->id); ?>">
+                                            <button type="submit" class="gfcv-delete-action" aria-label="حذف <?php echo esc_attr($view->view_title); ?>" title="حذف لیست">
+                                                <span class="dashicons dashicons-trash" aria-hidden="true"></span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div id="gfcv-filter-empty" class="gfcv-dashboard-filter-empty" hidden>
+                <span class="dashicons dashicons-search" aria-hidden="true"></span>
+                <strong>نتیجه‌ای پیدا نشد</strong>
+                <p>عبارت جست‌وجو یا فیلتر انتخابی را تغییر دهید.</p>
+                <button type="button" id="gfcv-clear-filters" class="button button-secondary">پاک‌کردن فیلترها</button>
+            </div>
+        <?php else : ?>
+            <div class="gfcv-dashboard-empty">
+                <span class="gfcv-empty-icon" aria-hidden="true"><span class="dashicons dashicons-welcome-add-page"></span></span>
+                <h3>هنوز لیستی ایجاد نکرده‌اید</h3>
+                <p>اولین لیست نمایشی را بسازید تا بتوانید رکوردهای فرم را با سطح دسترسی دلخواه نمایش دهید.</p>
+                <a href="<?php echo esc_url($add_url); ?>" class="button button-primary">ایجاد اولین لیست</a>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <div class="gfcv-dashboard-settings-heading">
+        <h2>تنظیمات نمایش و چاپ</h2>
+        <p>تنظیمات فونت گزارش‌ها جدا از مدیریت لیست‌ها نگهداری می‌شود.</p>
+    </div>
 
     <details class="gfcv-font-accordion" <?php echo isset($_GET['font_error']) || isset($_GET['font_updated']) ? 'open' : ''; ?>>
         <summary><span class="dashicons dashicons-editor-textcolor" aria-hidden="true"></span> تنظیمات فونت سفارشی گزارش‌ها و چاپ</summary>
@@ -119,4 +257,6 @@ if (!defined('ABSPATH')) {
     </div>
 
     </details>
+
+    <div class="gfcv-dashboard-feedback" id="gfcv-dashboard-feedback" role="status" aria-live="polite"></div>
 </div>
