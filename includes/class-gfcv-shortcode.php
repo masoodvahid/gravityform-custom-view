@@ -776,13 +776,50 @@ class GFCV_Shortcode {
      * @return array The lookup parameters
      */
     private function parse_kavenegar_pattern($pattern, $entry, $form) {
-        $processed = $this->process_template($pattern, $entry, $form, false);
+        // Resolve Gravity Forms placeholders to PLAIN TEXT for SMS.
+        // The rich HTML report renderer must not be used for token values.
+        $processed = preg_replace_callback('/\\{(entry_id|[0-9]+(?:\\.[0-9]+)?)\\}/u',
+            function($matches) use ($entry, $form) {
+                $id = $matches[1];
+                if ('entry_id' === $id) {
+                    return (string) absint(rgar($entry, 'id'));
+                }
+                $value = rgar($entry, $id);
+                if ((null === $value || '' === trim((string) $value))
+                    && false === strpos($id, '.')) {
+                    // Compound Name fields / checkbox parents store sub-inputs.
+                    foreach ((array) ($form['fields'] ?? array()) as $field) {
+                        if ((string) $field->id !== $id || empty($field->inputs)) {
+                            continue;
+                        }
+                        $parts = array();
+                        foreach ($field->inputs as $input) {
+                            if (!isset($input['id'])) { continue; }
+                            $piece = rgar($entry, (string) $input['id']);
+                            if (is_scalar($piece) && trim((string) $piece) !== '') {
+                                $parts[] = (string) $piece;
+                            }
+                        }
+                        $value = implode('، ', $parts);
+                        break;
+                    }
+                }
+                if (is_array($value)) {
+                    $value = implode('، ', array_filter(array_map('strval', $value), 'strlen'));
+                }
+                return is_scalar($value) ? sanitize_text_field((string) $value) : '';
+            }, (string) $pattern);
+
+        // Token values may contain Persian text or spaces. Identify parameter
+        // boundaries first and slice values between consecutive parameter keys.
+        preg_match_all('/(token(?:2|3|10|20)?|template)=/u', $processed, $matches, PREG_OFFSET_CAPTURE);
         $params = array();
-        // Existing templates are encoded as token=...token2=...template=...
-        // Capture each value up to the next recognized parameter.
-        preg_match_all('/(?:^|(?<=\\s)|(?<=[^a-zA-Z]))(token(?:2|3|10|20)?|template)=(.*?)(?=token(?:2|3|10|20)?=|template=|$)/us', $processed, $matches, PREG_SET_ORDER);
-        foreach ($matches as $match) {
-            $params[$match[1]] = trim($match[2]);
+        $count = count($matches[0]);
+        for ($i = 0; $i < $count; $i++) {
+            $name = $matches[1][$i][0];
+            $start = $matches[0][$i][1] + strlen($matches[0][$i][0]);
+            $end = ($i + 1 < $count) ? $matches[0][$i+1][1] : strlen($processed);
+            $params[$name] = trim(substr($processed, $start, $end - $start));
         }
         return $params;
     }
